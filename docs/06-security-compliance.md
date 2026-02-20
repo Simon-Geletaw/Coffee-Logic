@@ -4,6 +4,12 @@ Network & transport
 - TLS everywhere, enforced via load balancers/CDN. Use automatic certificate rotation (ACM / managed certs).
 - Restrict management ports and use bastion hosts / private endpoints for DB and admin panels.
 
+Who this is for
+- Junior developers learning secure coding and PCI basics.
+
+What you are building (simple)
+- A secure system that protects user data and payments.
+
 Application security
 - WAF for public endpoints and rate limiting on APIs (IP/user throttling).
 - Use CSP, X-Frame-Options, HSTS, and secure cookie flags site-wide.
@@ -27,3 +33,16 @@ Incident response
 
 Third-party risk
 - Review Stripe, Elasticsearch, and hosting provider SLAs. Keep plan B options for critical services (e.g., OpenSearch fallback).
+
+SRS alignment (MVP)
+- NFR-Sec-01: PCI scope minimized via Stripe; TLS enforced; webhook signatures validated.
+- FR-Auth-005: CSRF protection on state-changing requests.
+- FR-CO-007: idempotency keys enforced on checkout and webhook processing.
+
+Build and run (junior-friendly)
+- Use Stripe test keys locally and never commit secrets.
+- Follow docs/09-development-setup.md for environment variable guidance.
+
+Common beginner mistakes
+- Logging sensitive data (like card tokens or passwords).
+- Storing secrets in `.env` files that are committed to git.

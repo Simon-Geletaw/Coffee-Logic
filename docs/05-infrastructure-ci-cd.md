@@ -8,6 +8,12 @@ CI/CD pipeline
   3. Run container multi-stage builds and push to registry (GHCR/ECR/ACR).
   4. Terraform plan in PR comment and `terraform apply` on protected `main/master` or release tags.
 
+Who this is for
+- Junior developers learning CI/CD and deployments.
+
+What you are building (simple)
+- A pipeline that runs tests on every change and deploys safely.
+
 Docker & image management
 - Keep small images via multi-stage builds; use distroless or scratch for Go images.
 - Tag images with semantic versions and commit SHA.
@@ -28,3 +34,14 @@ Testing
 
 Observability & alerts
 - CI should build artifacts and run smoke tests after deployment, posting success/failure to Slack/Teams.
+
+Quality gates (MVP)
+- Run SRS acceptance tests (AT-*) as e2e smoke checks in staging.
+- Block merges if lint, unit tests, or AT smoke checks fail.
+
+Build and run (junior-friendly)
+- For local setup and commands, follow docs/09-development-setup.md.
+
+Common beginner mistakes
+- Merging without running tests.
+- Storing secrets in the repo.
