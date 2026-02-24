@@ -1,0 +1,185 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  viewer
+  operator
+  manager
+  admin
+}
+
+enum OrderStatus {
+  pending
+  paid
+  failed
+  refunded
+}
+
+enum SubscriptionStatus {
+  active
+  paused
+  canceled
+}
+
+enum WebhookStatus {
+  success
+  fail
+}
+
+model User {
+  id             String         @id @default(uuid())
+  firstName      String
+  lastName       String
+  email          String         @unique
+  phoneNumber    String?        @unique
+  passwordHash   String
+  role           UserRole
+  defaultAddress String?
+  isActive       Boolean        @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  orders         Order[]
+  subscriptions  Subscription[]
+  auditEvents    AuditEvent[]   @relation("AuditActor")
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  name           String
+  description    String?
+  roastLevel     String
+  grind          String
+  origin         String
+  process        String
+  caffeine       String
+  sensoryProfile Json?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  variants ProductVariant[]
+  batches  Batch[]
+}
+
+model ProductVariant {
+  id          String  @id @default(uuid())
+  productId   String
+  weightGrams Int
+  priceCents  Int
+  sku         String?
+  isActive    Boolean @default(true)
+
+  product           Product            @relation(fields: [productId], references: [id])
+  orderItems        OrderItem[]
+  subscriptionItems SubscriptionItem[]
+}
+
+model Batch {
+  id        String    @id @default(uuid())
+  productId String
+  batchCode String
+  roastDate DateTime
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  product   Product    @relation(fields: [productId], references: [id])
+  inventory Inventory?
+}
+
+model Inventory {
+  id        String   @id @default(uuid())
+  batchId   String   @unique
+  onHand    Int
+  reserved  Int
+  available Int
+  updatedAt DateTime @updatedAt
+
+  batch Batch @relation(fields: [batchId], references: [id])
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          String?
+  status          OrderStatus
+  totalCents      Int
+  currency        String
+  paymentProvider String
+  paymentIntentId String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user  User?       @relation(fields: [userId], references: [id])
+  items OrderItem[]
+}
+
+model OrderItem {
+  id               String @id @default(uuid())
+  orderId          String
+  productVariantId String
+  quantity         Int
+  unitPriceCents   Int
+  lineTotalCents   Int
+
+  order          Order          @relation(fields: [orderId], references: [id])
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id])
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  userId               String
+  stripeSubscriptionId String             @unique
+  status               SubscriptionStatus
+  cadenceDays          Int
+  nextChargeAt         DateTime
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user  User               @relation(fields: [userId], references: [id])
+  items SubscriptionItem[]
+}
+
+model SubscriptionItem {
+  id               String @id @default(uuid())
+  subscriptionId   String
+  productVariantId String
+  quantity         Int
+  unitPriceCents   Int
+
+  subscription   Subscription   @relation(fields: [subscriptionId], references: [id])
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id])
+}
+
+model WebhookLog {
+  id           String        @id @default(uuid())
+  provider     String
+  eventId      String        @unique
+  eventType    String
+  payload      Json
+  status       WebhookStatus
+  errorMessage String?
+  processedAt  DateTime?
+}
+
+model AuditEvent {
+  id          String   @id @default(uuid())
+  actorUserId String
+  action      String
+  targetType  String
+  targetId    String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  actor User @relation("AuditActor", fields: [actorUserId], references: [id])
+}
