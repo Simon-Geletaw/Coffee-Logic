@@ -19,12 +19,4 @@ export class AppController {
     return { status: 'ok' };
   }
 
-  @Get('products')
-  async getProducts() {
-    return (await this.prisma.product.findMany()).map((product) => ({
-      id: product.id,
-      name: product.name,
-      roast: product.roastLevel,
-    }));
-  }
 }

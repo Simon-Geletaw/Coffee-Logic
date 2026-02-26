@@ -8,7 +8,7 @@ export default async function Home() {
  
   const res = await fetch("http://localhost:3001/health", {cache :'no-store'});
   const data = await res.json();
-  const resproducts = await fetch("http://localhost:3001/products", {cache :'no-store'});
+  const resproducts = await fetch("http://localhost:3001/products/", {cache :'no-store'});
   const products:Product[] = await resproducts.json();
 
   return (
@@ -22,7 +22,8 @@ export default async function Home() {
       <div>
         <ul>
             {products.map((product)=>
-            <li key={product.id}>{product.name} - {product.roast}</li>)}
+            <li key={product.id}>{product.id}
+              {product.name} - {product.roast}</li>)}
           </ul>
       </div>
     </main>

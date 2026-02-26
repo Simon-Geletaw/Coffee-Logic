@@ -6,12 +6,12 @@
   ],
   "scripts": {
     "dev:web": "pnpm -C apps/web dev",
-    "dev:api": "pnpm -C apps/api dev",
+    "dev:api": "pnpm -C apps/api start:dev",
     "test": "pnpm -C apps/api test && pnpm -C apps/web test",
     "test:e2e": "pnpm -C apps/api test:e2e"
   },
-  "dependencies": {
-    "@prisma/client": "^7.4.1",
-    "prisma": "^7.4.1"
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.16",
+    "@nestjs/schematics": "^11.0.9"
   }
 }
