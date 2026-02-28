@@ -6,15 +6,22 @@ export class ProductsController {
   constructor(private readonly productsService: ProductService) {}
 
   @Get()
-  getProducts( @Query('roastLevel') roastLevel?: string,
+  getProducts(
+    @Query('roastLevel') roastLevel?: string,
+    @Query('roast') roast?: string,
     @Query('grind') grind?: string,
     @Query('origin') origin?: string,
     @Query('caffeine') caffeine?: string,
     @Query('name') name?: string,
-    @Query('process') process?: string
-
-) {
-    return this.productsService.getProducts();
-   
+    @Query('process') process?: string,
+  ) {
+    return this.productsService.getProducts({
+      roastLevel: roastLevel ?? roast,
+      grind,
+      origin,
+      caffeine,
+      name,
+      process,
+    });
   }
 }
