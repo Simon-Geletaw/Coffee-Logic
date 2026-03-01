@@ -7,6 +7,10 @@ type Product = {
   id: number;
   name: string;
   roast: string;
+  grind: string;
+  origin: string;
+  process: string;
+  caffeine: string;
 };
 
 const API_BASE_URL = 'http://localhost:3001';
@@ -18,6 +22,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [roast, setRoast] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
   const productsUrl = useMemo(() => {
     const params = new URLSearchParams();
@@ -69,6 +74,19 @@ export default function Home() {
 
     fetchProducts();
   }, [productsUrl]);
+
+  useEffect(() => {
+    if (!products.length) {
+      setSelectedProductId(null);
+      return;
+    }
+
+    if (selectedProductId !== null && !products.some((product) => product.id === selectedProductId)) {
+      setSelectedProductId(null);
+    }
+  }, [products, selectedProductId]);
+
+  const selectedProduct = products.find((product) => product.id === selectedProductId) ?? null;
 
   const healthBadgeStyles =
     healthStatus === 'ok'
@@ -130,7 +148,7 @@ export default function Home() {
           <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h3 className="text-xl font-semibold text-white md:text-2xl">Coffee Collection</h3>
-              <p className="mt-1 text-sm text-slate-400">Filter inventory by roast level.</p>
+              <p className="mt-1 text-sm text-slate-400">Filter inventory by roast level and tap a coffee card to see full details.</p>
             </div>
 
             <div className="w-full sm:w-56">
@@ -169,9 +187,13 @@ export default function Home() {
           {!loading && !error && (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {products.map((product) => (
-                <article
+                <button
                   key={product.id}
-                  className="rounded-2xl border border-slate-800 bg-slate-900 p-5 transition hover:border-slate-700"
+                  type="button"
+                  onClick={() => setSelectedProductId(product.id)}
+                  className={`rounded-2xl border bg-slate-900 p-5 text-left transition hover:border-slate-700 ${
+                    selectedProductId === product.id ? 'border-slate-500' : 'border-slate-800'
+                  }`}
                 >
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <h4 className="line-clamp-1 text-base font-semibold text-white md:text-lg">{product.name}</h4>
@@ -180,7 +202,7 @@ export default function Home() {
                     </span>
                   </div>
                   <p className="text-sm text-slate-400">Single origin coffee selected for balanced flavor and clean finish.</p>
-                </article>
+                </button>
               ))}
 
               {products.length === 0 && (
@@ -189,6 +211,42 @@ export default function Home() {
                 </div>
               )}
             </div>
+          )}
+
+          {selectedProduct && (
+            <article className="mt-5 rounded-2xl border border-slate-700 bg-slate-950 p-5">
+              <h4 className="mb-4 text-lg font-semibold text-white">Selected Coffee Details</h4>
+              <dl className="grid gap-3 text-sm text-slate-300 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">ID</dt>
+                  <dd className="mt-1 font-medium text-slate-100">{selectedProduct.id}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Name</dt>
+                  <dd className="mt-1 font-medium text-slate-100">{selectedProduct.name || '-'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Roast</dt>
+                  <dd className="mt-1 font-medium text-slate-100">{selectedProduct.roast || '-'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Grind</dt>
+                  <dd className="mt-1 font-medium text-slate-100">{selectedProduct.grind || '-'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Origin</dt>
+                  <dd className="mt-1 font-medium text-slate-100">{selectedProduct.origin || '-'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Process</dt>
+                  <dd className="mt-1 font-medium text-slate-100">{selectedProduct.process || '-'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Caffeine</dt>
+                  <dd className="mt-1 font-medium text-slate-100">{selectedProduct.caffeine || '-'}</dd>
+                </div>
+              </dl>
+            </article>
           )}
         </section>
       </div>
