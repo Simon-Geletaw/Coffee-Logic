@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ProductService } from '../product/product.service';
 type productAtrributes = {
   roastLevel?: string;
@@ -15,7 +15,7 @@ type productAtrributes = {
 export class ProductsController {
   constructor(private readonly productsService: ProductService) {}
 
-  @Get()
+  @Get('list')
   getProducts(
     @Query('roastLevel') roastLevel?: string,
     @Query('roast') roast?: string,
@@ -34,9 +34,16 @@ export class ProductsController {
       process,
     });
   }
-  @Post()
+  @Post('add')
   createProduct(@Body() product: productAtrributes) {
     return this.productsService.createProduct(product);
       }
+  @Patch(':id')
+  updateProduct(
+    @Param('id') id: string,
+    @Body() updateProduct: productAtrributes
+  ) {
+    return this.productsService.updateProduct(id, updateProduct);
+  }
   
 }

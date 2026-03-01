@@ -76,4 +76,38 @@ export class ProductService {
     });     
     return newProduct;
     }
-}
+    async updateProduct(id: string, updatesProduct: productAttribute = {}) {
+        if (!id) {
+            throw new (await import('@nestjs/common')).BadRequestException('Product id is required');
+        }
+
+        const existingProduct = await this.prisma.product.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                name: true,                description: true,
+                roastLevel: true,
+                grind: true,    
+                origin: true,
+                process: true,
+                caffeine: true,
+            },
+        });
+        if (!existingProduct) {
+            throw new (await import('@nestjs/common')).NotFoundException('Product not found');
+        }
+        const updatedProduct = await this.prisma.product.update({
+            where: { id:existingProduct.id },
+            data: {
+                name: updatesProduct?.name ?? existingProduct.name,
+                roastLevel: updatesProduct?.roastLevel ?? existingProduct.roastLevel,
+                grind: updatesProduct?.grind ?? existingProduct.grind,
+                origin: updatesProduct?.origin ?? existingProduct.origin,
+                process: updatesProduct?.process ?? existingProduct.process,
+                caffeine: updatesProduct?.caffeine ?? existingProduct.caffeine,
+                description: updatesProduct?.description ?? existingProduct.description,
+            },
+        });
+        return updatedProduct;       
+             }
+        };

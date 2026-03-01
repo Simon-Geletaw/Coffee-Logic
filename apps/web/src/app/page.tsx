@@ -1,20 +1,10 @@
 'use client';
 
-import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
-
-type Product = {
-  id: number;
-  name: string;
-  roast: string;
-  grind: string;
-  origin: string;
-  process: string;
-  caffeine: string;
-};
-
-const API_BASE_URL = 'http://localhost:3001';
-const ROAST_OPTIONS = ['light', 'medium', 'dark'] as const;
+import { useEffect, useState } from 'react';
+import { AdminNav } from '@/features/products/components/admin-nav';
+import { ROAST_OPTIONS } from '@/features/products/constants';
+import { getProducts } from '@/features/products/api';
+import type { Product } from '@/features/products/types';
 
 export default function Home() {
   const [healthStatus, setHealthStatus] = useState('loading...');
@@ -22,22 +12,14 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [roast, setRoast] = useState('');
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
-
-  const productsUrl = useMemo(() => {
-    const params = new URLSearchParams();
-    if (roast) {
-      params.set('roast', roast);
-    }
-
-    const query = params.toString();
-    return `${API_BASE_URL}/admin/products${query ? `?${query}` : ''}`;
-  }, [roast]);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchHealth = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/health`, { cache: 'no-store' });
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001'}/health`, {
+          cache: 'no-store',
+        });
         if (!response.ok) {
           throw new Error(`Health API failed: ${response.status}`);
         }
@@ -57,12 +39,7 @@ export default function Home() {
       setError('');
 
       try {
-        const response = await fetch(productsUrl, { cache: 'no-store' });
-        if (!response.ok) {
-          throw new Error(`Products API failed: ${response.status}`);
-        }
-
-        const data: Product[] = await response.json();
+        const data = await getProducts(roast);
         setProducts(data);
       } catch (err) {
         setProducts([]);
@@ -73,7 +50,7 @@ export default function Home() {
     };
 
     fetchProducts();
-  }, [productsUrl]);
+  }, [roast]);
 
   useEffect(() => {
     if (!products.length) {
@@ -102,14 +79,9 @@ export default function Home() {
           <div className="flex items-center gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Coffee Logic</p>
-              <h1 className="text-lg font-semibold text-white md:text-xl">Craft Coffee Dashboard</h1>
+              <h1 className="text-lg font-semibold text-white md:text-xl">Coffee Admin Panel</h1>
             </div>
-            <Link
-              href="/add-product"
-              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-200 transition hover:border-slate-500"
-            >
-              Add Product
-            </Link>
+            <AdminNav currentPath="/" />
           </div>
           <span
             className={`rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wide ${healthBadgeStyles}`}

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Coffee Logic",
-  description: "Coffee Logic storefront and product dashboard.",
+  title: "Coffee Logic Admin Panel",
+  description: "Coffee Logic admin panel for product management.",
 };
 
 export default function RootLayout({
