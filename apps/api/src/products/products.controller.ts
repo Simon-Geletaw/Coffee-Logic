@@ -1,7 +1,17 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ProductService } from '../product/product.service';
+type productAtrributes = {
+  roastLevel?: string;
+  grind?: string; 
+  origin?: string;
+  caffeine?: string;
+  name?: string;
+  process?: string;
+  description?: string;
 
-@Controller('products')
+}
+
+@Controller('admin/products')
 export class ProductsController {
   constructor(private readonly productsService: ProductService) {}
 
@@ -24,4 +34,9 @@ export class ProductsController {
       process,
     });
   }
+  @Post()
+  createProduct(@Body() product: productAtrributes) {
+    return this.productsService.createProduct(product);
+      }
+  
 }

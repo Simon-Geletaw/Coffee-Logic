@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
 type Product = {
@@ -25,7 +26,7 @@ export default function Home() {
     }
 
     const query = params.toString();
-    return `${API_BASE_URL}/products${query ? `?${query}` : ''}`;
+    return `${API_BASE_URL}/admin/products${query ? `?${query}` : ''}`;
   }, [roast]);
 
   useEffect(() => {
@@ -80,9 +81,17 @@ export default function Home() {
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto flex w-full max-w-6xl flex-col px-6 py-8 md:px-10 lg:px-12">
         <header className="mb-10 flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/60 px-5 py-4 backdrop-blur">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Coffee Logic</p>
-            <h1 className="text-lg font-semibold text-white md:text-xl">Craft Coffee Dashboard</h1>
+          <div className="flex items-center gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Coffee Logic</p>
+              <h1 className="text-lg font-semibold text-white md:text-xl">Craft Coffee Dashboard</h1>
+            </div>
+            <Link
+              href="/add-product"
+              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-200 transition hover:border-slate-500"
+            >
+              Add Product
+            </Link>
           </div>
           <span
             className={`rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wide ${healthBadgeStyles}`}

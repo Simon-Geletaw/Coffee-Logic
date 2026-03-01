@@ -1,20 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 
-type ProductFilter = {
+type productAttribute = {
     roastLevel?: string;
     grind?: string;
     origin?: string;
     caffeine?: string;
     name?: string;
     process?: string;
+    description?: string;
 };
 
 @Injectable()
 export class ProductService {
     constructor(private readonly prisma: PrismaService) {}
 
-    async getProducts(filter: ProductFilter = {}) {
+    async getProducts(filter: productAttribute = {}) {
         const products = await this.prisma.product.findMany({
             where: {
                 ...(filter.roastLevel ? { roastLevel: filter.roastLevel } : {}),
@@ -55,5 +56,24 @@ export class ProductService {
             process: product.process,
             caffeine: product.caffeine,
         }));
+    }
+    async createProduct(product: productAttribute) {
+        if (!product.name) {
+            throw new (await import('@nestjs/common')).PreconditionFailedException('Product name is required');
+        }
+        const newProduct = await this.prisma.product.create({
+            data: {
+                name: product.name ?? '',
+                roastLevel: product.roastLevel ?? '',
+                grind: product.grind ?? '',
+                origin: product.origin ?? '',
+                process: product.process ?? '',
+                caffeine: product.caffeine ?? '',
+                description: product.description ?? '',
+                isActive: true,
+            },  
+    
+    });     
+    return newProduct;
     }
 }
