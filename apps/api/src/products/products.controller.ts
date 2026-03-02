@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ProductService } from '../product/product.service';
 type productAtrributes = {
   roastLevel?: string;
@@ -44,6 +44,10 @@ export class ProductsController {
     @Body() updateProduct: productAtrributes
   ) {
     return this.productsService.updateProduct(id, updateProduct);
+  }
+  @Delete(':id')
+  deleteProduct(@Param('id') id: string) {
+    return this.productsService.deleteProduct(id);
   }
   
 }

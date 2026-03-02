@@ -1,13 +1,15 @@
 import Link from 'next/link';
 
 type AdminNavProps = {
-  currentPath: '/' | '/add-product' | '/manage-products';
+  currentPath: '/' | '/add-product' | '/manage-products' | '/delete-products';
+
 };
 
 const links: Array<{ href: AdminNavProps['currentPath']; label: string }> = [
   { href: '/', label: 'Dashboard' },
   { href: '/add-product', label: 'Add Product' },
   { href: '/manage-products', label: 'Manage Products' },
+  { href: '/delete-products', label: 'Delete Products' },
 ];
 
 export function AdminNav({ currentPath }: AdminNavProps) {
