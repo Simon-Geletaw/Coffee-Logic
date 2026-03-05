@@ -1,19 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Response } from 'express';
+import { User } from '@prisma/client';
+import { CreateUserDto } from './dto/create-user.dto';
 type UserReturnData={
-    first_name:string;
-    last_name:string;
+    firstName:string;
+    lastName:string;
     email:string;
 }
 type UserCreateData={
-    first_name:string;
-    last_name:string;
+    firstName:string;
+    lastName:string;
     email:string;
     phoneNumber:string;
     passwordHash:string;
     role:string;
 
+}
+type ServiceResponse={
+    status:number;
+    message:string;
 }
 @Injectable()
 export class UserService {
@@ -22,34 +27,47 @@ export class UserService {
         const user:UserReturnData[]=await this.prisma.user.findMany({
             select:{
                 email:true,
-                first_name:true,
-                last_name:true,
+                firstName:true,
+                lastName:true,
                 }
             });
         return user;};
-        async createUser(userData:UserCreateData):Promise<Response>{
-            if(!userData.email || !userData.passwordHash || !userData.first_name || !userData.last_name || !userData.phoneNumber){
-                return {
-                    status:400,
-                    message:'Missing required fields'
-                } as unknown as Response;
-            }
-            const {email}=userData;
+        async createUser(userData:CreateUserDto):Promise<ServiceResponse>{
             const existingUserEmail=await this.prisma.user.findUnique({
-                where:{email}
+                where:{
+                    email:userData.email,}
             });
-            const exsitPhoneNumber=await this.prisma.user.findUnique({
-                where:{phoneNumber:userData.phoneNumber}
+            const exsistingUserPhone=await this.prisma.user.findUnique({
+                where:{
+                    phoneNumber:userData.phoneNumber,}
             });
-                if(existingUserEmail || exsitPhoneNumber){
+            if(existingUserEmail || exsistingUserPhone){
                 return {
                     status:400,
-                    message:'User with this email already exists'
-                } as unknown as Response;
+                    message:'Email already exists'
+                }
             }
-            const user=await this.prisma.user.create({
-                data:userData,
-                select:{
-                    email:true,}});
-        }
-    }   
+            const user= await this.prisma.user.create({
+                data:{
+                    firstName:userData.firstName,
+                    lastName:userData.lastName,
+                    email:userData.email,
+                    phoneNumber:userData.phoneNumber,
+                    passwordHash:userData.passwordHash,
+                    role:userData.role,
+                    defaultAddress:userData.defaultAddress,
+                }});
+                if(user){
+                    return {
+                        status:201,
+                        message:'User created successfully'
+                    }
+                }
+                else{                   
+                     return {
+                        status:500,
+                        message:'Failed to create user'
+                    }
+                }
+       
+        }}

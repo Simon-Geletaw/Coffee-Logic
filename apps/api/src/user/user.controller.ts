@@ -8,8 +8,8 @@ export class UserController {
   getAllUsers() {
     return this.userService.getAllUsers();
   }
-  Post()
-  createUser(@Body() createUserDto: CreateUserDto) {
-        return this.userService.createUser(createUserDto);
+  @Post()
+  createUser(@Body() createUserD: CreateUserDto) {
+        return this.userService.createUser(createUserD);
   }
 }
