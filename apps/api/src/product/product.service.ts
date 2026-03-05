@@ -110,4 +110,36 @@ export class ProductService {
         });
         return updatedProduct;       
              }
+        async deleteProduct(id: string) {
+            if (!id) {
+                throw new (await import('@nestjs/common')).BadRequestException('Product id is required');
+            }
+            const findtobeDeletedProduct = await this.prisma.product.findUnique({
+                where: { id },
+                select:{
+                    id:true
+                }
+                
+            });
+            if (!findtobeDeletedProduct) {
+                throw new (await import('@nestjs/common')).NotFoundException('Product not found');
+            }
+            const DeletedProduct=await this.prisma.product.update({
+                where: { id: findtobeDeletedProduct.id },
+                data: {isActive: false},});
+            if (!DeletedProduct) {
+                throw new (await import('@nestjs/common')).InternalServerErrorException('Failed to delete product');
+            }
+            if (!DeletedProduct.isActive) {
+                return {
+                    id: DeletedProduct.id,
+                    name: DeletedProduct.name,
+                    status: 'deleted' as const,
+                };
+            }
+            
+
+         
+
+        }
         };

@@ -63,3 +63,11 @@ export const updateProduct = async (id: string, form: ProductForm): Promise<Upda
 
   return response.json() as Promise<UpdateProductResponse>;
 };
+export const deleteProduct = async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/admin/products/${id}`, {method: 'DELETE'}); 
+    if(!response.ok) {
+        throw new Error(`Failed to delete product (${response.status})`);
+    }
+    
+
+};
