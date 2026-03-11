@@ -1,26 +1,184 @@
 @import "tailwindcss";
 
 :root {
-  --background: #020617;
-  --foreground: #e2e8f0;
+  --bg: #090f17;
+  --bg-soft: #111c28;
+  --surface: rgba(16, 27, 39, 0.72);
+  --surface-strong: rgba(12, 20, 30, 0.92);
+  --line: rgba(149, 175, 204, 0.26);
+  --line-strong: rgba(184, 210, 235, 0.44);
+  --text: #e7eef5;
+  --muted: #a7b7c9;
+  --accent: #4fa9c2;
+  --accent-strong: #7ec8de;
+  --danger: #e67070;
+  --success: #70c89e;
+  --shadow: 0 24px 50px rgba(2, 8, 20, 0.45);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #020617;
-    --foreground: #e2e8f0;
-  }
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --font-sans: var(--font-body-sans);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(79, 169, 194, 0.14), transparent 34%),
+    radial-gradient(circle at 90% 3%, rgba(193, 139, 88, 0.16), transparent 30%),
+    linear-gradient(155deg, #090f17 0%, #101a27 46%, #0b141f 100%);
+  color: var(--text);
+  font-family: var(--font-body-sans), "Segoe UI", sans-serif;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading-sans), "Segoe UI", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.app-shell {
+  min-height: 100vh;
+  color: var(--text);
+}
+
+.page-wrap {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 74rem;
+  padding: 2rem 1.25rem 2.75rem;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: var(--surface);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow);
+}
+
+.panel-soft {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: linear-gradient(160deg, rgba(23, 37, 54, 0.85), rgba(13, 23, 35, 0.9));
+}
+
+.field {
+  width: 100%;
+  border: 1px solid rgba(149, 175, 204, 0.3);
+  border-radius: 0.85rem;
+  background: var(--surface-strong);
+  color: var(--text);
+  padding: 0.62rem 0.78rem;
+  font-size: 0.9rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.field::placeholder {
+  color: #84a0ba;
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--line-strong);
+  box-shadow: 0 0 0 3px rgba(95, 189, 212, 0.22);
+}
+
+.btn-primary {
+  border: 1px solid rgba(126, 200, 222, 0.5);
+  background: linear-gradient(150deg, #84cedf 0%, #57abc4 100%);
+  color: #09202b;
+  border-radius: 0.85rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 0.62rem 1.1rem;
+  transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-danger {
+  border: 1px solid rgba(230, 112, 112, 0.55);
+  background: rgba(230, 112, 112, 0.14);
+  color: #fbc0c0;
+  border-radius: 0.85rem;
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 0.62rem 1.1rem;
+  transition: transform 160ms ease, background-color 160ms ease;
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  background: rgba(230, 112, 112, 0.2);
+}
+
+.btn-danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(149, 175, 204, 0.34);
+  background: rgba(12, 22, 35, 0.65);
+  padding: 0.21rem 0.6rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #bad1e6;
+}
+
+.status-alert {
+  border: 1px solid rgba(230, 112, 112, 0.3);
+  border-radius: 0.8rem;
+  background: rgba(230, 112, 112, 0.1);
+  color: #ffd1d1;
+  padding: 0.64rem 0.8rem;
+  font-size: 0.87rem;
+}
+
+.status-ok {
+  border: 1px solid rgba(112, 200, 158, 0.32);
+  border-radius: 0.8rem;
+  background: rgba(112, 200, 158, 0.12);
+  color: #bef1d8;
+  padding: 0.64rem 0.8rem;
+  font-size: 0.87rem;
+}
+
+.fade-up {
+  animation: fadeUp 380ms ease both;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 768px) {
+  .page-wrap {
+    padding-inline: 2rem;
+  }
 }

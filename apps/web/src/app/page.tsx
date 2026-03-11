@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AdminNav } from '@/features/products/components/admin-nav';
 import { ROAST_OPTIONS } from '@/features/products/constants';
 import { getProducts } from '@/features/products/api';
 import type { Product } from '@/features/products/types';
+import { AdminShell } from '@/features/ui/admin-shell';
 
 export default function Home() {
   const [healthStatus, setHealthStatus] = useState('loading...');
@@ -20,9 +20,11 @@ export default function Home() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001'}/health`, {
           cache: 'no-store',
         });
+
         if (!response.ok) {
           throw new Error(`Health API failed: ${response.status}`);
         }
+
         const health = await response.json();
         setHealthStatus(health.status ?? 'unknown');
       } catch {
@@ -65,164 +67,139 @@ export default function Home() {
 
   const selectedProduct = products.find((product) => product.id === selectedProductId) ?? null;
 
-  const healthBadgeStyles =
+  const healthBadgeClass =
     healthStatus === 'ok'
-      ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300'
+      ? 'status-ok'
       : healthStatus === 'loading...'
-        ? 'border-amber-400/30 bg-amber-500/10 text-amber-300'
-        : 'border-rose-400/30 bg-rose-500/10 text-rose-300';
+        ? 'rounded-lg border border-amber-300/30 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-200'
+        : 'rounded-lg border border-rose-300/30 bg-rose-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-rose-200';
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto flex w-full max-w-6xl flex-col px-6 py-8 md:px-10 lg:px-12">
-        <header className="mb-10 flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/60 px-5 py-4 backdrop-blur">
-          <div className="flex items-center gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Coffee Logic</p>
-              <h1 className="text-lg font-semibold text-white md:text-xl">Coffee Admin Panel</h1>
-            </div>
-            <AdminNav currentPath="/" />
+    <AdminShell
+      currentPath="/"
+      title="Coffee Intelligence Overview"
+      subtitle="Track API health, scan your catalog, and review product details from a premium control room."
+      badge={<span className={healthBadgeClass}>API {healthStatus}</span>}
+    >
+      <section className="fade-up mb-7 grid gap-4 lg:grid-cols-[1.45fr_1fr]">
+        <article className="panel p-6 md:p-7">
+          <span className="chip">Signature Workspace</span>
+          <h2 className="mt-4 text-3xl font-semibold text-slate-100 md:text-4xl">Attractive control center for coffee brands</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-300 md:text-base">
+            Keep product records current with live filters and rich detail previews. The layout is tuned for both desktop and mobile admin workflows.
+          </p>
+        </article>
+
+        <aside className="panel-soft p-6">
+          <div>
+            <p className="text-sm text-slate-300/85">Products Loaded</p>
+            <p className="mt-1 text-4xl font-semibold text-slate-100">{products.length}</p>
           </div>
-          <span
-            className={`rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wide ${healthBadgeStyles}`}
-          >
-            API {healthStatus}
-          </span>
-        </header>
+          <div className="my-4 h-px bg-slate-500/35" />
+          <div>
+            <p className="text-sm text-slate-300/85">Active Roast Filter</p>
+            <p className="mt-1 text-base font-semibold text-cyan-100">{roast || 'all roasts'}</p>
+          </div>
+        </aside>
+      </section>
 
-        <section className="mb-8 grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-          <article className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-800 p-6 md:p-8">
-            <p className="mb-3 inline-flex rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs uppercase tracking-wide text-slate-300">
-              Freshly roasted beans
-            </p>
-            <h2 className="text-3xl font-semibold leading-tight text-white md:text-4xl">
-              Build beautiful coffee moments from a real catalog
-            </h2>
-            <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-300 md:text-base">
-              Browse live product data from your backend, filter by roast profile, and keep an eye on API health in one clean interface.
-            </p>
-          </article>
+      <section className="panel fade-up p-5 md:p-6">
+        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-xl font-semibold text-slate-100 md:text-2xl">Inventory Collection</h3>
+            <p className="mt-1 text-sm text-slate-300/80">Filter by roast profile and open any card for complete product details.</p>
+          </div>
 
-          <aside className="grid gap-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
-            <div>
-              <p className="text-sm text-slate-400">Products Loaded</p>
-              <p className="mt-1 text-3xl font-semibold text-white">{products.length}</p>
-            </div>
-            <div className="h-px w-full bg-slate-800" />
-            <div>
-              <p className="text-sm text-slate-400">Active Filter</p>
-              <p className="mt-1 text-lg font-medium text-slate-200">{roast || 'all roasts'}</p>
-            </div>
-          </aside>
-        </section>
+          <div className="w-full sm:w-60">
+            <label htmlFor="roast" className="mb-2 block text-xs uppercase tracking-[0.18em] text-slate-300/70">
+              Roast
+            </label>
+            <select id="roast" className="field" value={roast} onChange={(event) => setRoast(event.target.value)}>
+              <option value="">All</option>
+              {ROAST_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option[0].toUpperCase() + option.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-        <section className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 md:p-6">
-          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h3 className="text-xl font-semibold text-white md:text-2xl">Coffee Collection</h3>
-              <p className="mt-1 text-sm text-slate-400">Filter inventory by roast level and tap a coffee card to see full details.</p>
-            </div>
+        {loading && (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="h-28 animate-pulse rounded-2xl border border-slate-500/30 bg-slate-900/55" />
+            ))}
+          </div>
+        )}
 
-            <div className="w-full sm:w-56">
-              <label htmlFor="roast" className="mb-2 block text-xs uppercase tracking-wide text-slate-400">
-                Roast
-              </label>
-              <select
-                id="roast"
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none ring-offset-2 transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500"
-                value={roast}
-                onChange={(event) => setRoast(event.target.value)}
+        {error && <p className="status-alert">{error}</p>}
+
+        {!loading && !error && (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {products.map((product) => (
+              <button
+                key={product.id}
+                type="button"
+                onClick={() => setSelectedProductId(product.id)}
+                className={`rounded-2xl border p-5 text-left transition ${
+                  selectedProductId === product.id
+                    ? 'border-cyan-200/60 bg-cyan-100/10'
+                    : 'border-slate-500/35 bg-slate-900/55 hover:border-cyan-300/45'
+                }`}
               >
-                <option value="">All</option>
-                {ROAST_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option[0].toUpperCase() + option.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h4 className="line-clamp-1 text-base font-semibold text-slate-100 md:text-lg">{product.name}</h4>
+                  <span className="chip">{product.roast}</span>
+                </div>
+                <p className="text-sm text-slate-300/75">Single-origin profile curated for balanced flavor and aromatic finish.</p>
+              </button>
+            ))}
+
+            {products.length === 0 && (
+              <div className="panel-soft p-6 text-sm text-slate-300 md:col-span-2 xl:col-span-3">
+                No products found for this filter.
+              </div>
+            )}
           </div>
+        )}
 
-          {loading && (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="h-28 animate-pulse rounded-2xl border border-slate-800 bg-slate-900"
-                />
-              ))}
-            </div>
-          )}
-
-          {error && <p className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p>}
-
-          {!loading && !error && (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {products.map((product) => (
-                <button
-                  key={product.id}
-                  type="button"
-                  onClick={() => setSelectedProductId(product.id)}
-                  className={`rounded-2xl border bg-slate-900 p-5 text-left transition hover:border-slate-700 ${
-                    selectedProductId === product.id ? 'border-slate-500' : 'border-slate-800'
-                  }`}
-                >
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <h4 className="line-clamp-1 text-base font-semibold text-white md:text-lg">{product.name}</h4>
-                    <span className="rounded-full border border-slate-700 bg-slate-950 px-2.5 py-1 text-xs uppercase tracking-wide text-slate-300">
-                      {product.roast}
-                    </span>
-                  </div>
-                  <p className="text-sm text-slate-400">Single origin coffee selected for balanced flavor and clean finish.</p>
-                </button>
-              ))}
-
-              {products.length === 0 && (
-                <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-sm text-slate-300 md:col-span-2 xl:col-span-3">
-                  No products found for this roast. Try another filter.
-                </div>
-              )}
-            </div>
-          )}
-
-          {selectedProduct && (
-            <article className="mt-5 rounded-2xl border border-slate-700 bg-slate-950 p-5">
-              <h4 className="mb-4 text-lg font-semibold text-white">Selected Coffee Details</h4>
-              <dl className="grid gap-3 text-sm text-slate-300 sm:grid-cols-2 lg:grid-cols-4">
-                <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">ID</dt>
-                  <dd className="mt-1 font-medium text-slate-100">{selectedProduct.id}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">Name</dt>
-                  <dd className="mt-1 font-medium text-slate-100">{selectedProduct.name || '-'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">Roast</dt>
-                  <dd className="mt-1 font-medium text-slate-100">{selectedProduct.roast || '-'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">Grind</dt>
-                  <dd className="mt-1 font-medium text-slate-100">{selectedProduct.grind || '-'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">Origin</dt>
-                  <dd className="mt-1 font-medium text-slate-100">{selectedProduct.origin || '-'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">Process</dt>
-                  <dd className="mt-1 font-medium text-slate-100">{selectedProduct.process || '-'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">Caffeine</dt>
-                  <dd className="mt-1 font-medium text-slate-100">{selectedProduct.caffeine || '-'}</dd>
-                </div>
-              </dl>
-            </article>
-          )}
-        </section>
-      </div>
-    </main>
+        {selectedProduct && (
+          <article className="panel-soft mt-5 p-5">
+            <h4 className="text-lg font-semibold text-slate-100">Selected Product</h4>
+            <dl className="mt-4 grid gap-3 text-sm text-slate-300 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-400">ID</dt>
+                <dd className="mt-1 font-medium text-slate-100">{selectedProduct.id}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-400">Name</dt>
+                <dd className="mt-1 font-medium text-slate-100">{selectedProduct.name || '-'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-400">Roast</dt>
+                <dd className="mt-1 font-medium text-slate-100">{selectedProduct.roast || '-'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-400">Grind</dt>
+                <dd className="mt-1 font-medium text-slate-100">{selectedProduct.grind || '-'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-400">Origin</dt>
+                <dd className="mt-1 font-medium text-slate-100">{selectedProduct.origin || '-'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-400">Process</dt>
+                <dd className="mt-1 font-medium text-slate-100">{selectedProduct.process || '-'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-400">Caffeine</dt>
+                <dd className="mt-1 font-medium text-slate-100">{selectedProduct.caffeine || '-'}</dd>
+              </div>
+            </dl>
+          </article>
+        )}
+      </section>
+    </AdminShell>
   );
 }
-

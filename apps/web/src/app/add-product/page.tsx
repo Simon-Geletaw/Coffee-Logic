@@ -2,8 +2,8 @@
 
 import { FormEvent, useState } from 'react';
 import { createProduct } from '@/features/products/api';
-import { AdminNav } from '@/features/products/components/admin-nav';
 import { emptyProductForm, type ProductForm } from '@/features/products/types';
+import { AdminShell } from '@/features/ui/admin-shell';
 
 export default function AddProductPage() {
   const [form, setForm] = useState<ProductForm>(emptyProductForm);
@@ -35,109 +35,94 @@ export default function AddProductPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto w-full max-w-3xl px-6 py-8 md:px-10 lg:px-12">
-        <header className="mb-8 flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/60 px-5 py-4 backdrop-blur">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Coffee Logic</p>
-            <h1 className="text-lg font-semibold text-white md:text-xl">Admin Panel - Add Product</h1>
-          </div>
-          <AdminNav currentPath="/add-product" />
-        </header>
-
-        <section className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 md:p-7">
-          <form className="grid gap-4" onSubmit={handleSubmit}>
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="grid gap-2 text-sm text-slate-300">
-                Name
-                <input
-                  value={form.name}
-                  onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-                  className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
-                  placeholder="Ethiopian Yirgacheffe"
-                  required
-                />
-              </label>
-
-              <label className="grid gap-2 text-sm text-slate-300">
-                Roast Level
-                <input
-                  value={form.roastLevel}
-                  onChange={(event) => setForm((prev) => ({ ...prev, roastLevel: event.target.value }))}
-                  className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
-                  placeholder="light / medium / dark"
-                />
-              </label>
-
-              <label className="grid gap-2 text-sm text-slate-300">
-                Grind
-                <input
-                  value={form.grind}
-                  onChange={(event) => setForm((prev) => ({ ...prev, grind: event.target.value }))}
-                  className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
-                  placeholder="whole bean"
-                />
-              </label>
-
-              <label className="grid gap-2 text-sm text-slate-300">
-                Origin
-                <input
-                  value={form.origin}
-                  onChange={(event) => setForm((prev) => ({ ...prev, origin: event.target.value }))}
-                  className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
-                  placeholder="Ethiopia"
-                />
-              </label>
-
-              <label className="grid gap-2 text-sm text-slate-300">
-                Process
-                <input
-                  value={form.process}
-                  onChange={(event) => setForm((prev) => ({ ...prev, process: event.target.value }))}
-                  className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
-                  placeholder="washed"
-                />
-              </label>
-
-              <label className="grid gap-2 text-sm text-slate-300">
-                Caffeine
-                <input
-                  value={form.caffeine}
-                  onChange={(event) => setForm((prev) => ({ ...prev, caffeine: event.target.value }))}
-                  className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
-                  placeholder="regular"
-                />
-              </label>
-            </div>
-
-            <label className="grid gap-2 text-sm text-slate-300">
-              Description
-              <textarea
-                value={form.description}
-                onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
-                className="min-h-28 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
-                placeholder="Flavor notes and details"
+    <AdminShell
+      currentPath="/add-product"
+      title="Launch New Coffee Product"
+      subtitle="Add an attractive product profile with roast, process, and tasting details."
+    >
+      <section className="panel fade-up p-6 md:p-7">
+        <form className="grid gap-4" onSubmit={handleSubmit}>
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="grid gap-2 text-sm text-slate-200">
+              Coffee Name
+              <input
+                value={form.name}
+                onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+                className="field"
+              placeholder="Midnight Bloom Espresso"
+                required
               />
             </label>
 
-            {errorMessage && (
-              <p className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{errorMessage}</p>
-            )}
+            <label className="grid gap-2 text-sm text-slate-200">
+              Roast Level
+              <input
+                value={form.roastLevel}
+                onChange={(event) => setForm((prev) => ({ ...prev, roastLevel: event.target.value }))}
+                className="field"
+                placeholder="light / medium / dark"
+              />
+            </label>
 
-            {successMessage && (
-              <p className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{successMessage}</p>
-            )}
+            <label className="grid gap-2 text-sm text-slate-200">
+              Grind
+              <input
+                value={form.grind}
+                onChange={(event) => setForm((prev) => ({ ...prev, grind: event.target.value }))}
+                className="field"
+                placeholder="whole bean"
+              />
+            </label>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="inline-flex w-fit items-center rounded-xl border border-slate-700 bg-slate-100 px-4 py-2 text-sm font-medium text-slate-900 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {submitting ? 'Saving...' : 'Save Product'}
-            </button>
-          </form>
-        </section>
-      </div>
-    </main>
+            <label className="grid gap-2 text-sm text-slate-200">
+              Origin
+              <input
+                value={form.origin}
+                onChange={(event) => setForm((prev) => ({ ...prev, origin: event.target.value }))}
+                className="field"
+                placeholder="Ethiopia"
+              />
+            </label>
+
+            <label className="grid gap-2 text-sm text-slate-200">
+              Process
+              <input
+                value={form.process}
+                onChange={(event) => setForm((prev) => ({ ...prev, process: event.target.value }))}
+                className="field"
+                placeholder="washed"
+              />
+            </label>
+
+            <label className="grid gap-2 text-sm text-slate-200">
+              Caffeine
+              <input
+                value={form.caffeine}
+                onChange={(event) => setForm((prev) => ({ ...prev, caffeine: event.target.value }))}
+                className="field"
+                placeholder="regular"
+              />
+            </label>
+          </div>
+
+            <label className="grid gap-2 text-sm text-slate-200">
+              Flavor Story
+            <textarea
+              value={form.description}
+              onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
+              className="field min-h-28"
+              placeholder="Velvety cocoa, toasted hazelnut, and sweet citrus finish"
+            />
+          </label>
+
+          {errorMessage && <p className="status-alert">{errorMessage}</p>}
+          {successMessage && <p className="status-ok">{successMessage}</p>}
+
+          <button type="submit" disabled={submitting} className="btn-primary inline-flex w-fit items-center">
+            {submitting ? 'Saving...' : 'Save Product'}
+          </button>
+        </form>
+      </section>
+    </AdminShell>
   );
 }

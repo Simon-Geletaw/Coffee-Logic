@@ -11,7 +11,11 @@
     "test:e2e": "pnpm -C apps/api test:e2e"
   },
   "devDependencies": {
-    "@nestjs/cli": "^11.0.16",
-    "@nestjs/schematics": "^11.0.9"
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0"
+  },
+  "dependencies": {
+    "@nestjs/core": "^11.0.1",
+    "bcrypt": "^6.0.0"
   }
 }

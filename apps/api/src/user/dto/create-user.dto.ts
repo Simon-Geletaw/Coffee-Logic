@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsString, IsStrongPassword, MinLength } from 'class-validator';
 
 export class CreateUserDto {
     @IsNotEmpty({ message: 'First name is required' })
@@ -14,6 +14,7 @@ export class CreateUserDto {
     @IsNotEmpty({ message: 'Phone number is required' })
     @IsString()
     phoneNumber: string;
+    @IsStrongPassword({ message: 'Password must be at least 6 characters long and contain a mix of letters, numbers, and special characters' })
     @MinLength(6, { message: 'Password must be at least 6 characters long' })
     @IsNotEmpty({ message: 'Password is required' })
     @IsString()
