@@ -1,8 +1,10 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import Link from 'next/link';
 import { API_BASE_URL } from '@/features/products/constants';
 import { AdminShell } from '@/features/ui/admin-shell';
+import { AdminSessionGate } from '@/features/auth/components/admin-session-gate';
 
 const ROLE_OPTIONS = ['viewer', 'operator', 'manager', 'admin'] as const;
 type Role = (typeof ROLE_OPTIONS)[number];
@@ -28,12 +30,13 @@ const emptyForm: CreateUserPayload = {
   email: '',
   phoneNumber: '',
   passwordHash: '',
-  role: 'viewer',
+  role: 'admin',
   defaultAddress: '',
 };
 
 export default function UserPanel() {
   const [form, setForm] = useState<CreateUserPayload>(emptyForm);
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -90,15 +93,23 @@ export default function UserPanel() {
   };
 
   return (
-    <AdminShell
-      currentPath="/create-user"
-      title="Create Team Profile"
-      subtitle="Add staff accounts with role-based access in a clean onboarding flow."
-    >
-      <section className="panel fade-up p-6 md:p-7">
+    <AdminSessionGate requiredRole="admin">
+      <AdminShell
+        currentPath="/create-user"
+        title="Users"
+        subtitle="Create internal admin users. This page is available only to signed-in administrators."
+      >
+        <section className="panel fade-up p-6 md:p-7">
+        <div className="panel-soft mb-5 p-4">
+          <p className="text-sm font-semibold text-slate-900">Admin-only user creation</p>
+          <p className="mt-2 text-sm text-slate-600">
+            Use this form to create admin users for internal operations.
+          </p>
+        </div>
+
         <form className="grid gap-4" onSubmit={onSubmit}>
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               First Name
               <input
                 value={form.firstName}
@@ -109,7 +120,7 @@ export default function UserPanel() {
               />
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Last Name
               <input
                 value={form.lastName}
@@ -120,7 +131,7 @@ export default function UserPanel() {
               />
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Email
               <input
                 type="email"
@@ -132,7 +143,7 @@ export default function UserPanel() {
               />
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Phone Number
               <input
                 value={form.phoneNumber}
@@ -143,20 +154,30 @@ export default function UserPanel() {
               />
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Password
-              <input
-                type="password"
-                minLength={6}
-                value={form.passwordHash}
-                onChange={(event) => setForm((prev) => ({ ...prev, passwordHash: event.target.value }))}
-                className="field"
-                placeholder="At least 6 characters"
-                required
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  minLength={6}
+                  value={form.passwordHash}
+                  onChange={(event) => setForm((prev) => ({ ...prev, passwordHash: event.target.value }))}
+                  className="field"
+                  placeholder="At least 6 characters"
+                  required
+                />
+                <button
+                  type="button"
+                  className="btn-secondary inline-flex items-center justify-center px-3 py-2 text-xs font-semibold"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Access Role
               <select
                 value={form.role}
@@ -172,7 +193,7 @@ export default function UserPanel() {
             </label>
           </div>
 
-          <label className="grid gap-2 text-sm text-slate-200">
+          <label className="grid gap-2 text-sm text-slate-700">
             Default Address (optional)
             <textarea
               value={form.defaultAddress ?? ''}
@@ -183,13 +204,21 @@ export default function UserPanel() {
           </label>
 
           {errorMessage && <p className="status-alert">{errorMessage}</p>}
-          {successMessage && <p className="status-ok">{successMessage}</p>}
+          {successMessage && (
+            <div className="status-ok">
+              <p>{successMessage}</p>
+              <Link href="/" className="mt-3 inline-flex font-semibold text-blue-700 underline underline-offset-4">
+                Return to dashboard
+              </Link>
+            </div>
+          )}
 
           <button type="submit" disabled={submitting} className="btn-primary inline-flex w-fit items-center">
             {submitting ? 'Creating...' : 'Create User'}
           </button>
         </form>
-      </section>
-    </AdminShell>
+        </section>
+      </AdminShell>
+    </AdminSessionGate>
   );
 }
