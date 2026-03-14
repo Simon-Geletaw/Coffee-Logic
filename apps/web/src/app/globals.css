@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #090f17;
-  --bg-soft: #111c28;
-  --surface: rgba(16, 27, 39, 0.72);
-  --surface-strong: rgba(12, 20, 30, 0.92);
-  --line: rgba(149, 175, 204, 0.26);
-  --line-strong: rgba(184, 210, 235, 0.44);
-  --text: #e7eef5;
-  --muted: #a7b7c9;
-  --accent: #4fa9c2;
-  --accent-strong: #7ec8de;
-  --danger: #e67070;
-  --success: #70c89e;
-  --shadow: 0 24px 50px rgba(2, 8, 20, 0.45);
+  --bg: #f6f8fb;
+  --bg-soft: #eef2f7;
+  --surface: #ffffff;
+  --surface-strong: #ffffff;
+  --line: #d8e0ea;
+  --line-strong: #8fb3d3;
+  --text: #102132;
+  --muted: #5c6f82;
+  --accent: #1f74b8;
+  --accent-strong: #145f99;
+  --danger: #c74444;
+  --success: #1f8f63;
+  --shadow: 0 10px 28px rgba(12, 28, 52, 0.08);
 }
 
 @theme inline {
@@ -23,10 +23,7 @@
 }
 
 body {
-  background:
-    radial-gradient(circle at 8% 12%, rgba(79, 169, 194, 0.14), transparent 34%),
-    radial-gradient(circle at 90% 3%, rgba(193, 139, 88, 0.16), transparent 30%),
-    linear-gradient(155deg, #090f17 0%, #101a27 46%, #0b141f 100%);
+  background: linear-gradient(180deg, #f8fafd 0%, #f3f7fb 100%);
   color: var(--text);
   font-family: var(--font-body-sans), "Segoe UI", sans-serif;
   min-height: 100vh;
@@ -56,19 +53,18 @@ h4 {
   border: 1px solid var(--line);
   border-radius: 1.25rem;
   background: var(--surface);
-  backdrop-filter: blur(10px);
   box-shadow: var(--shadow);
 }
 
 .panel-soft {
   border: 1px solid var(--line);
   border-radius: 1rem;
-  background: linear-gradient(160deg, rgba(23, 37, 54, 0.85), rgba(13, 23, 35, 0.9));
+  background: #f8fbff;
 }
 
 .field {
   width: 100%;
-  border: 1px solid rgba(149, 175, 204, 0.3);
+  border: 1px solid #c8d3df;
   border-radius: 0.85rem;
   background: var(--surface-strong);
   color: var(--text);
@@ -78,19 +74,19 @@ h4 {
 }
 
 .field::placeholder {
-  color: #84a0ba;
+  color: #8496a9;
 }
 
 .field:focus {
   outline: none;
   border-color: var(--line-strong);
-  box-shadow: 0 0 0 3px rgba(95, 189, 212, 0.22);
+  box-shadow: 0 0 0 3px rgba(44, 130, 200, 0.2);
 }
 
 .btn-primary {
-  border: 1px solid rgba(126, 200, 222, 0.5);
-  background: linear-gradient(150deg, #84cedf 0%, #57abc4 100%);
-  color: #09202b;
+  border: 1px solid rgba(31, 116, 184, 0.32);
+  background: linear-gradient(150deg, #2d86cc 0%, #1f74b8 100%);
+  color: #f8fbff;
   border-radius: 0.85rem;
   font-weight: 700;
   font-size: 0.88rem;
@@ -100,7 +96,7 @@ h4 {
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  filter: brightness(1.04);
+  filter: brightness(1.02);
 }
 
 .btn-primary:disabled {
@@ -110,9 +106,9 @@ h4 {
 }
 
 .btn-danger {
-  border: 1px solid rgba(230, 112, 112, 0.55);
-  background: rgba(230, 112, 112, 0.14);
-  color: #fbc0c0;
+  border: 1px solid rgba(199, 68, 68, 0.3);
+  background: rgba(199, 68, 68, 0.1);
+  color: #8f2c2c;
   border-radius: 0.85rem;
   font-weight: 600;
   font-size: 0.88rem;
@@ -122,7 +118,7 @@ h4 {
 
 .btn-danger:hover {
   transform: translateY(-1px);
-  background: rgba(230, 112, 112, 0.2);
+  background: rgba(199, 68, 68, 0.16);
 }
 
 .btn-danger:disabled {
@@ -131,33 +127,48 @@ h4 {
   transform: none;
 }
 
+.btn-secondary {
+  border: 1px solid #c8d3df;
+  background: #f8fbff;
+  color: #2c4863;
+  border-radius: 0.85rem;
+  font-weight: 600;
+  font-size: 0.84rem;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.btn-secondary:hover {
+  border-color: #9fb8d2;
+  background: #f0f6fd;
+}
+
 .chip {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(149, 175, 204, 0.34);
-  background: rgba(12, 22, 35, 0.65);
+  border: 1px solid #cad9e8;
+  background: #eff6fd;
   padding: 0.21rem 0.6rem;
   font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #bad1e6;
+  color: #2f5f8b;
 }
 
 .status-alert {
-  border: 1px solid rgba(230, 112, 112, 0.3);
+  border: 1px solid rgba(199, 68, 68, 0.28);
   border-radius: 0.8rem;
-  background: rgba(230, 112, 112, 0.1);
-  color: #ffd1d1;
+  background: rgba(199, 68, 68, 0.08);
+  color: #9d3a3a;
   padding: 0.64rem 0.8rem;
   font-size: 0.87rem;
 }
 
 .status-ok {
-  border: 1px solid rgba(112, 200, 158, 0.32);
+  border: 1px solid rgba(31, 143, 99, 0.28);
   border-radius: 0.8rem;
-  background: rgba(112, 200, 158, 0.12);
-  color: #bef1d8;
+  background: rgba(31, 143, 99, 0.1);
+  color: #146a48;
   padding: 0.64rem 0.8rem;
   font-size: 0.87rem;
 }

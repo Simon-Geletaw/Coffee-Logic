@@ -6,11 +6,11 @@ type AdminNavProps = {
 };
 
 const links: Array<{ href: AdminNavProps['currentPath']; label: string }> = [
-  { href: '/', label: 'Overview' },
-  { href: '/add-product', label: 'New Product' },
-  { href: '/manage-products', label: 'Catalog Editor' },
-  { href: '/delete-products', label: 'Archive Product' },
-  { href: '/create-user', label: 'Team Access' },
+  { href: '/', label: 'Dashboard' },
+  { href: '/add-product', label: 'Add Product' },
+  { href: '/manage-products', label: 'Manage Products' },
+  { href: '/delete-products', label: 'Delete Products' },
+  { href: '/create-user', label: 'Users' },
 ];
 
 export function AdminNav({ currentPath }: AdminNavProps) {
@@ -23,8 +23,8 @@ export function AdminNav({ currentPath }: AdminNavProps) {
           href={link.href}
           className={`rounded-xl border px-3.5 py-2 text-sm font-medium transition ${
             currentPath === link.href
-              ? 'border-cyan-200/60 bg-cyan-200/20 text-cyan-100'
-              : 'border-slate-600/50 bg-slate-900/70 text-slate-200 hover:border-cyan-300/50 hover:text-cyan-100'
+              ? 'border-blue-300 bg-blue-50 text-blue-800'
+              : 'border-slate-300 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700'
           }`}
         >
           {link.label}
