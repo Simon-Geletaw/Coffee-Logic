@@ -4,6 +4,7 @@ import { FormEvent, useState } from 'react';
 import { createProduct } from '@/features/products/api';
 import { emptyProductForm, type ProductForm } from '@/features/products/types';
 import { AdminShell } from '@/features/ui/admin-shell';
+import { AdminSessionGate } from '@/features/auth/components/admin-session-gate';
 
 export default function AddProductPage() {
   const [form, setForm] = useState<ProductForm>(emptyProductForm);
@@ -35,15 +36,16 @@ export default function AddProductPage() {
   };
 
   return (
-    <AdminShell
-      currentPath="/add-product"
-      title="Launch New Coffee Product"
-      subtitle="Add an attractive product profile with roast, process, and tasting details."
-    >
-      <section className="panel fade-up p-6 md:p-7">
+    <AdminSessionGate requiredRole="admin">
+      <AdminShell
+        currentPath="/add-product"
+        title="Add Product"
+        subtitle="Create a new product record with complete catalog details."
+      >
+        <section className="panel fade-up p-6 md:p-7">
         <form className="grid gap-4" onSubmit={handleSubmit}>
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Coffee Name
               <input
                 value={form.name}
@@ -54,7 +56,7 @@ export default function AddProductPage() {
               />
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Roast Level
               <input
                 value={form.roastLevel}
@@ -64,7 +66,7 @@ export default function AddProductPage() {
               />
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Grind
               <input
                 value={form.grind}
@@ -74,7 +76,7 @@ export default function AddProductPage() {
               />
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Origin
               <input
                 value={form.origin}
@@ -84,7 +86,7 @@ export default function AddProductPage() {
               />
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Process
               <input
                 value={form.process}
@@ -94,7 +96,7 @@ export default function AddProductPage() {
               />
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Caffeine
               <input
                 value={form.caffeine}
@@ -105,7 +107,7 @@ export default function AddProductPage() {
             </label>
           </div>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Flavor Story
             <textarea
               value={form.description}
@@ -122,7 +124,8 @@ export default function AddProductPage() {
             {submitting ? 'Saving...' : 'Save Product'}
           </button>
         </form>
-      </section>
-    </AdminShell>
+        </section>
+      </AdminShell>
+    </AdminSessionGate>
   );
 }

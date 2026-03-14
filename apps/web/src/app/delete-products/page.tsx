@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { deleteProduct, getProducts } from '@/features/products/api';
 import type { Product } from '@/features/products/types';
 import { AdminShell } from '@/features/ui/admin-shell';
+import { AdminSessionGate } from '@/features/auth/components/admin-session-gate';
 
 export default function DeleteProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -52,18 +53,19 @@ export default function DeleteProductsPage() {
   };
 
   return (
-    <AdminShell
-      currentPath="/delete-products"
-      title="Catalog Archive"
-      subtitle="Retire outdated products with a clean, safe archive flow."
-    >
-      <section className="panel fade-up p-5 md:p-6">
+    <AdminSessionGate requiredRole="admin">
+      <AdminShell
+        currentPath="/delete-products"
+        title="Delete Products"
+        subtitle="Remove products safely from the catalog."
+      >
+        <section className="panel fade-up p-5 md:p-6">
         <div className="mb-5">
-          <h2 className="text-xl font-semibold text-slate-100 md:text-2xl">Select Product to Archive</h2>
-          <p className="mt-1 text-sm text-slate-300/80">Choose one product card, then confirm removal.</p>
+          <h2 className="text-xl font-semibold text-slate-900 md:text-2xl">Select Product to Delete</h2>
+          <p className="mt-1 text-sm text-slate-600">Choose one product card, then confirm deletion.</p>
         </div>
 
-        {loading && <p className="text-sm text-slate-300">Loading products...</p>}
+        {loading && <p className="text-sm text-slate-600">Loading products...</p>}
         {error && <p className="status-alert">{error}</p>}
         {successMessage && <p className="status-ok mb-4">{successMessage}</p>}
 
@@ -76,28 +78,29 @@ export default function DeleteProductsPage() {
                 onClick={() => setSelectedId(product.id)}
                 className={`rounded-2xl border p-5 text-left transition ${
                   selectedId === product.id
-                    ? 'border-rose-300/70 bg-rose-200/10'
-                    : 'border-slate-500/35 bg-slate-900/55 hover:border-rose-300/55'
+                    ? 'border-rose-300 bg-rose-50'
+                    : 'border-slate-200 bg-white hover:border-rose-300'
                 }`}
               >
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <h3 className="line-clamp-1 text-base font-semibold text-slate-100">{product.name}</h3>
+                  <h3 className="line-clamp-1 text-base font-semibold text-slate-900">{product.name}</h3>
                   <span className="chip">{product.roast}</span>
                 </div>
-                <p className="text-xs text-slate-300/70">ID: {product.id}</p>
+                <p className="text-xs text-slate-500">ID: {product.id}</p>
               </button>
             ))}
 
-            {products.length === 0 && <div className="panel-soft p-6 text-sm text-slate-300 md:col-span-2 xl:col-span-3">No products available to delete.</div>}
+            {products.length === 0 && <div className="panel-soft p-6 text-sm text-slate-600 md:col-span-2 xl:col-span-3">No products available to delete.</div>}
           </div>
         )}
 
         <div className="mt-6">
           <button type="button" onClick={handleDelete} disabled={!selectedId || deleting} className="btn-danger inline-flex w-fit items-center">
-            {deleting ? 'Archiving...' : 'Archive Selected Product'}
+            {deleting ? 'Deleting...' : 'Delete Selected Product'}
           </button>
         </div>
-      </section>
-    </AdminShell>
+        </section>
+      </AdminShell>
+    </AdminSessionGate>
   );
 }

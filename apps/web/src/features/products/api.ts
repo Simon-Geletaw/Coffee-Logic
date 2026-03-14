@@ -1,5 +1,6 @@
 import { API_BASE_URL } from './constants';
 import type { Product, ProductForm } from './types';
+import { getAuthorizationHeader } from '@/features/auth/storage';
 
 type UpdateProductResponse = {
   name?: string;
@@ -19,10 +20,13 @@ export const getProducts = async (roast?: string): Promise<Product[]> => {
   const query = params.toString();
   const response = await fetch(`${API_BASE_URL}/admin/products/list${query ? `?${query}` : ''}`, {
     cache: 'no-store',
+    headers: {
+      ...getAuthorizationHeader(),
+    },
   });
 
   if (!response.ok) {
-    throw new Error(`Products API failed: ${response.status}`);
+    throw new Error(response.status === 401 ? 'Please sign in again.' : response.status === 403 ? 'Your account does not have product access.' : `Products API failed: ${response.status}`);
   }
 
   return response.json() as Promise<Product[]>;
@@ -33,6 +37,7 @@ export const createProduct = async (form: ProductForm): Promise<void> => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthorizationHeader(),
     },
     body: JSON.stringify({
       ...form,
@@ -41,7 +46,7 @@ export const createProduct = async (form: ProductForm): Promise<void> => {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to create product (${response.status})`);
+    throw new Error(response.status === 401 ? 'Please sign in again.' : response.status === 403 ? 'Only administrators can create products.' : `Failed to create product (${response.status})`);
   }
 };
 
@@ -50,6 +55,7 @@ export const updateProduct = async (id: string, form: ProductForm): Promise<Upda
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthorizationHeader(),
     },
     body: JSON.stringify({
       ...form,
@@ -58,16 +64,19 @@ export const updateProduct = async (id: string, form: ProductForm): Promise<Upda
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to update product (${response.status})`);
+    throw new Error(response.status === 401 ? 'Please sign in again.' : response.status === 403 ? 'Only administrators can update products.' : `Failed to update product (${response.status})`);
   }
 
   return response.json() as Promise<UpdateProductResponse>;
 };
 export const deleteProduct = async (id: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/admin/products/${id}`, {method: 'DELETE'}); 
+    const response = await fetch(`${API_BASE_URL}/admin/products/${id}`, {
+      method: 'DELETE',
+      headers: {
+        ...getAuthorizationHeader(),
+      },
+    }); 
     if(!response.ok) {
-        throw new Error(`Failed to delete product (${response.status})`);
+        throw new Error(response.status === 401 ? 'Please sign in again.' : response.status === 403 ? 'Only administrators can archive products.' : `Failed to delete product (${response.status})`);
     }
-    
-
 };

@@ -5,6 +5,7 @@ import { getProducts, updateProduct as updateProductRequest } from '@/features/p
 import { ROAST_OPTIONS } from '@/features/products/constants';
 import { emptyProductForm, mapProductToForm, type Product, type ProductForm } from '@/features/products/types';
 import { AdminShell } from '@/features/ui/admin-shell';
+import { AdminSessionGate } from '@/features/auth/components/admin-session-gate';
 
 export default function ManageProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -92,20 +93,21 @@ export default function ManageProductsPage() {
   };
 
   return (
-    <AdminShell
-      currentPath="/manage-products"
-      title="Catalog Experience Editor"
-      subtitle="Refine product details and keep your storefront data sharp and professional."
-    >
-      <section className="panel fade-up mb-6 p-5 md:p-6">
+    <AdminSessionGate requiredRole="admin">
+      <AdminShell
+        currentPath="/manage-products"
+        title="Manage Products"
+        subtitle="Update existing product records and keep your catalog accurate."
+      >
+        <section className="panel fade-up mb-6 p-5 md:p-6">
         <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-slate-100 md:text-2xl">Choose Product to Refine</h2>
-            <p className="mt-1 text-sm text-slate-300/80">Choose any product and revise fields in the form below.</p>
+            <h2 className="text-xl font-semibold text-slate-900 md:text-2xl">Select Product</h2>
+            <p className="mt-1 text-sm text-slate-600">Choose a product and edit its fields below.</p>
           </div>
 
           <div className="w-full sm:w-56">
-            <label htmlFor="roast" className="mb-2 block text-xs uppercase tracking-[0.18em] text-slate-300/70">
+            <label htmlFor="roast" className="mb-2 block text-xs uppercase tracking-[0.18em] text-slate-500">
               Roast
             </label>
             <select id="roast" className="field" value={roast} onChange={(event) => setRoast(event.target.value)}>
@@ -119,7 +121,7 @@ export default function ManageProductsPage() {
           </div>
         </div>
 
-        {loading && <p className="text-sm text-slate-300">Loading products...</p>}
+        {loading && <p className="text-sm text-slate-600">Loading products...</p>}
         {error && <p className="status-alert">{error}</p>}
 
         {!loading && !error && (
@@ -131,26 +133,26 @@ export default function ManageProductsPage() {
                 onClick={() => setSelectedProductId(product.id)}
                 className={`rounded-2xl border p-5 text-left transition ${
                   selectedProductId === product.id
-                    ? 'border-cyan-200/65 bg-cyan-100/10'
-                    : 'border-slate-500/35 bg-slate-900/55 hover:border-cyan-300/45'
+                    ? 'border-blue-300 bg-blue-50'
+                    : 'border-slate-200 bg-white hover:border-blue-300'
                 }`}
               >
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <h3 className="line-clamp-1 text-base font-semibold text-slate-100">{product.name}</h3>
+                  <h3 className="line-clamp-1 text-base font-semibold text-slate-900">{product.name}</h3>
                   <span className="chip">{product.roast}</span>
                 </div>
-                <p className="text-xs text-slate-300/70">ID: {product.id}</p>
+                <p className="text-xs text-slate-500">ID: {product.id}</p>
               </button>
             ))}
           </div>
         )}
-      </section>
+        </section>
 
-      <section className="panel fade-up p-6 md:p-7">
-        <h2 className="mb-4 text-xl font-semibold text-slate-100 md:text-2xl">Polish Product Details</h2>
+        <section className="panel fade-up p-6 md:p-7">
+        <h2 className="mb-4 text-xl font-semibold text-slate-900 md:text-2xl">Edit Product Details</h2>
         <form className="grid gap-4" onSubmit={handleSubmit}>
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Coffee Name
               <input
                 value={form.name}
@@ -160,7 +162,7 @@ export default function ManageProductsPage() {
               />
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Roast Level
               <input
                 value={form.roastLevel}
@@ -170,7 +172,7 @@ export default function ManageProductsPage() {
               />
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Grind
               <input
                 value={form.grind}
@@ -180,7 +182,7 @@ export default function ManageProductsPage() {
               />
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Origin
               <input
                 value={form.origin}
@@ -190,7 +192,7 @@ export default function ManageProductsPage() {
               />
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Process
               <input
                 value={form.process}
@@ -200,7 +202,7 @@ export default function ManageProductsPage() {
               />
             </label>
 
-            <label className="grid gap-2 text-sm text-slate-200">
+            <label className="grid gap-2 text-sm text-slate-700">
               Caffeine
               <input
                 value={form.caffeine}
@@ -211,7 +213,7 @@ export default function ManageProductsPage() {
             </label>
           </div>
 
-          <label className="grid gap-2 text-sm text-slate-200">
+          <label className="grid gap-2 text-sm text-slate-700">
             Description
             <textarea
               value={form.description}
@@ -228,7 +230,8 @@ export default function ManageProductsPage() {
             {saving ? 'Updating...' : 'Update Product'}
           </button>
         </form>
-      </section>
-    </AdminShell>
+        </section>
+      </AdminShell>
+    </AdminSessionGate>
   );
 }
