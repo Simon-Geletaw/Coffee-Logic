@@ -40,15 +40,11 @@ export default function LoginPage() {
       <div className="page-wrap grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
         <section className="panel fade-up p-6 md:p-7">
           <span className="chip">Admin access</span>
-          <h1 className="mt-4 text-3xl font-semibold text-slate-900 md:text-4xl">Sign in to Coffee Logic Admin</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 md:text-base">
-            Use your administrator account to manage products and users securely.
-          </p>
+          <h1 className="mt-4 text-3xl font-semibold text-slate-900 md:text-4xl">Admin</h1>
         </section>
 
         <section className="panel fade-up p-6 md:p-7">
-          <h2 className="text-xl font-semibold text-slate-900 md:text-2xl">Admin sign in</h2>
-          <p className="mt-2 text-sm text-slate-600">Enter your email and password.</p>
+          <h2 className="text-xl font-semibold text-slate-900 md:text-2xl">Login</h2>
 
           <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
             <label className="grid gap-2 text-sm text-slate-700">

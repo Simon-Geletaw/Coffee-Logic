@@ -57,7 +57,7 @@ export default function DeleteProductsPage() {
       <AdminShell
         currentPath="/delete-products"
         title="Delete Products"
-        subtitle="Remove products safely from the catalog."
+        subtitle="Admin"
       >
         <section className="panel fade-up p-5 md:p-6">
         <div className="mb-5">

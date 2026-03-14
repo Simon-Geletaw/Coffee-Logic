@@ -97,7 +97,7 @@ export default function ManageProductsPage() {
       <AdminShell
         currentPath="/manage-products"
         title="Manage Products"
-        subtitle="Update existing product records and keep your catalog accurate."
+        subtitle="Admin"
       >
         <section className="panel fade-up mb-6 p-5 md:p-6">
         <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

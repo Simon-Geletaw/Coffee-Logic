@@ -40,7 +40,7 @@ export default function AddProductPage() {
       <AdminShell
         currentPath="/add-product"
         title="Add Product"
-        subtitle="Create a new product record with complete catalog details."
+        subtitle="Admin"
       >
         <section className="panel fade-up p-6 md:p-7">
         <form className="grid gap-4" onSubmit={handleSubmit}>

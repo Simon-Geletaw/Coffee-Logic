@@ -13,8 +13,8 @@ const headingSans = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Coffee Logic Studio",
-  description: "Premium admin experience for coffee catalog and team operations.",
+  title: "Admin",
+  description: "Admin",
 };
 
 export default function RootLayout({

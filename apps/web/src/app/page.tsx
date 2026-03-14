@@ -80,16 +80,13 @@ export default function Home() {
       <AdminShell
         currentPath="/"
         title="Dashboard"
-        subtitle="Monitor API status and manage product data from one reliable admin workspace."
+        subtitle="Admin"
         badge={<span className={healthBadgeClass}>API {healthStatus}</span>}
       >
         <section className="fade-up mb-7 grid gap-4 lg:grid-cols-[1.45fr_1fr]">
         <article className="panel p-6 md:p-7">
-          <span className="chip">Operations</span>
-          <h2 className="mt-4 text-3xl font-semibold text-slate-900 md:text-4xl">Manage your catalog with confidence</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 md:text-base">
-            Review products, apply roast filters, and check details quickly with a clean admin layout.
-          </p>
+          <span className="chip">Admin</span>
+          <h2 className="mt-4 text-3xl font-semibold text-slate-900 md:text-4xl">Products</h2>
         </article>
 
         <aside className="panel-soft p-6">

@@ -97,14 +97,11 @@ export default function UserPanel() {
       <AdminShell
         currentPath="/create-user"
         title="Users"
-        subtitle="Create internal admin users. This page is available only to signed-in administrators."
+        subtitle="Admin"
       >
         <section className="panel fade-up p-6 md:p-7">
         <div className="panel-soft mb-5 p-4">
-          <p className="text-sm font-semibold text-slate-900">Admin-only user creation</p>
-          <p className="mt-2 text-sm text-slate-600">
-            Use this form to create admin users for internal operations.
-          </p>
+          <p className="text-sm font-semibold text-slate-900">Admin</p>
         </div>
 
         <form className="grid gap-4" onSubmit={onSubmit}>
@@ -208,7 +205,7 @@ export default function UserPanel() {
             <div className="status-ok">
               <p>{successMessage}</p>
               <Link href="/" className="mt-3 inline-flex font-semibold text-blue-700 underline underline-offset-4">
-                Return to dashboard
+                Back
               </Link>
             </div>
           )}
