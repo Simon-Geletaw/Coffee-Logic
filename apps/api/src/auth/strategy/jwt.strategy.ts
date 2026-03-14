@@ -29,4 +29,13 @@ export class JwtAuthStrategy extends PassportStrategy(Strategy) {
   );}
   async validate(payload: any) {
     return payload; // You can add more user validation logic here if needed
-  }}
+  }
+    private tokenExtractorFromHeader(request: Request): string | undefined {
+        if (!request) {
+            return undefined;
+        }
+        const [type, token] = request.headers.get?.('authorization')?.split(' ') ?? [];
+        return type === 'Bearer' && token ? token : undefined;
+    }}
+
+   
