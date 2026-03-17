@@ -1,9 +1,6 @@
 {
   "name": "coffee-logic",
   "private": true,
-  "workspaces": [
-    "apps/*"
-  ],
   "scripts": {
     "dev:web": "pnpm -C apps/web dev",
     "dev:api": "pnpm -C apps/api start:dev",

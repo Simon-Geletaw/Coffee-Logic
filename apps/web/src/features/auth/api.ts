@@ -1,5 +1,5 @@
-import { API_BASE_URL } from '@/features/products/constants';
 import type { AuthRole, AuthSession } from './storage';
+import { apiFetchJson } from '@/features/api/api-fetch';
 
 type LoginPayload = {
   email: string;
@@ -19,21 +19,20 @@ const decodeJwtPayload = (token: string): { email?: string; role?: AuthRole } =>
   }
 
   const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
-  const decoded = window.atob(normalized);
+  const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=');
+  const decoded = window.atob(padded);
   return JSON.parse(decoded) as { email?: string; role?: AuthRole };
 };
 
 export const loginAdmin = async (payload: LoginPayload): Promise<AuthSession> => {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  const result = await apiFetchJson<LoginResponse>('/auth/login', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
+    body: payload,
+    auth: 'none',
+    retries: 0,
   });
 
-  const result = (await response.json()) as LoginResponse;
-  if (!response.ok || result.code >= 400 || !result.token) {
+  if (result.code >= 400 || !result.token) {
     throw new Error(result.message || 'Login failed');
   }
 

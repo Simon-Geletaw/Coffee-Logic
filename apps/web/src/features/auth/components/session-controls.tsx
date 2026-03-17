@@ -1,16 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { clearAuthSession, getAuthSession, type AuthSession } from '../storage';
+import { clearAuthSession } from '../storage';
+import { useAuthSession } from '../hooks/use-auth-session';
 
 export function SessionControls() {
   const router = useRouter();
-  const [session, setSession] = useState<AuthSession | null>(null);
-
-  useEffect(() => {
-    setSession(getAuthSession());
-  }, []);
+  const session = useAuthSession();
 
   if (!session) {
     return null;

@@ -1,82 +1,70 @@
-import { API_BASE_URL } from './constants';
 import type { Product, ProductForm } from './types';
-import { getAuthorizationHeader } from '@/features/auth/storage';
+import { apiFetchJson } from '@/features/api/api-fetch';
 
-type UpdateProductResponse = {
-  name?: string;
-  roastLevel?: string;
-  grind?: string;
-  origin?: string;
-  process?: string;
-  caffeine?: string;
-};
+export type ProductListFilters = Partial<{
+  roastLevel: string;
+  roast: string;
+  grind: string;
+  origin: string;
+  caffeine: string;
+  name: string;
+  process: string;
+}>;
 
-export const getProducts = async (roast?: string): Promise<Product[]> => {
+export const getProducts = async (filters: ProductListFilters = {}): Promise<Product[]> => {
   const params = new URLSearchParams();
-  if (roast) {
-    params.set('roast', roast);
-  }
-
-  const query = params.toString();
-  const response = await fetch(`${API_BASE_URL}/admin/products/list${query ? `?${query}` : ''}`, {
-    cache: 'no-store',
-    headers: {
-      ...getAuthorizationHeader(),
-    },
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) {
+      params.set(key, value);
+    }
   });
 
-  if (!response.ok) {
-    throw new Error(response.status === 401 ? 'Please sign in again.' : response.status === 403 ? 'Your account does not have product access.' : `Products API failed: ${response.status}`);
-  }
-
-  return response.json() as Promise<Product[]>;
+  const query = params.toString();
+  return apiFetchJson<Product[]>(`/admin/products/list${query ? `?${query}` : ''}`, {
+    method: 'GET',
+    auth: 'required',
+  });
 };
 
 export const createProduct = async (form: ProductForm): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/admin/products/add`, {
+  await apiFetchJson<unknown>('/admin/products/add', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthorizationHeader(),
-    },
-    body: JSON.stringify({
+    body: {
       ...form,
       name: form.name.trim(),
-    }),
+      roastLevel: form.roastLevel?.trim() ?? '',
+      grind: form.grind?.trim() ?? '',
+      origin: form.origin?.trim() ?? '',
+      process: form.process?.trim() ?? '',
+      caffeine: form.caffeine?.trim() ?? '',
+      description: form.description?.trim() ?? '',
+    },
+    auth: 'required',
+    retries: 0,
   });
-
-  if (!response.ok) {
-    throw new Error(response.status === 401 ? 'Please sign in again.' : response.status === 403 ? 'Only administrators can create products.' : `Failed to create product (${response.status})`);
-  }
 };
 
-export const updateProduct = async (id: string, form: ProductForm): Promise<UpdateProductResponse> => {
-  const response = await fetch(`${API_BASE_URL}/admin/products/${id}`, {
+export const updateProduct = async (id: string, patch: Partial<ProductForm>): Promise<void> => {
+  await apiFetchJson<unknown>(`/admin/products/${id}`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthorizationHeader(),
+    auth: 'required',
+    retries: 0,
+    body: {
+      ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
+      ...(patch.roastLevel !== undefined ? { roastLevel: patch.roastLevel.trim() } : {}),
+      ...(patch.grind !== undefined ? { grind: patch.grind.trim() } : {}),
+      ...(patch.origin !== undefined ? { origin: patch.origin.trim() } : {}),
+      ...(patch.process !== undefined ? { process: patch.process.trim() } : {}),
+      ...(patch.caffeine !== undefined ? { caffeine: patch.caffeine.trim() } : {}),
+      ...(patch.description !== undefined ? { description: patch.description.trim() } : {}),
     },
-    body: JSON.stringify({
-      ...form,
-      name: form.name.trim(),
-    }),
   });
-
-  if (!response.ok) {
-    throw new Error(response.status === 401 ? 'Please sign in again.' : response.status === 403 ? 'Only administrators can update products.' : `Failed to update product (${response.status})`);
-  }
-
-  return response.json() as Promise<UpdateProductResponse>;
 };
+
 export const deleteProduct = async (id: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/admin/products/${id}`, {
-      method: 'DELETE',
-      headers: {
-        ...getAuthorizationHeader(),
-      },
-    }); 
-    if(!response.ok) {
-        throw new Error(response.status === 401 ? 'Please sign in again.' : response.status === 403 ? 'Only administrators can archive products.' : `Failed to delete product (${response.status})`);
-    }
+  await apiFetchJson<unknown>(`/admin/products/${id}`, {
+    method: 'DELETE',
+    auth: 'required',
+    retries: 0,
+  });
 };

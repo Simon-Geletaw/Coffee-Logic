@@ -1,5 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ProductService } from '../product/product.service';
+import { Roles } from 'src/common/decorator/roles.decorator';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
 type productAtrributes = {
   roastLevel?: string;
   grind?: string; 
@@ -10,7 +13,8 @@ type productAtrributes = {
   description?: string;
 
 }
-
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin')
 @Controller('admin/products')
 export class ProductsController {
   constructor(private readonly productsService: ProductService) {}

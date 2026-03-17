@@ -9,6 +9,14 @@ export type AuthSession = {
 };
 
 const AUTH_STORAGE_KEY = 'coffee-logic-admin-session';
+const AUTH_SESSION_EVENT = `${AUTH_STORAGE_KEY}:changed`;
+
+const notifyAuthSessionChanged = () => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  window.dispatchEvent(new Event(AUTH_SESSION_EVENT));
+};
 
 export const saveAuthSession = (session: AuthSession) => {
   if (typeof window === 'undefined') {
@@ -16,6 +24,7 @@ export const saveAuthSession = (session: AuthSession) => {
   }
 
   window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+  notifyAuthSessionChanged();
 };
 
 export const getAuthSession = (): AuthSession | null => {
@@ -42,6 +51,38 @@ export const clearAuthSession = () => {
   }
 
   window.localStorage.removeItem(AUTH_STORAGE_KEY);
+  notifyAuthSessionChanged();
+};
+
+export const handleUnauthorized = () => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (window.location.pathname === '/login') {
+    return;
+  }
+
+  window.location.assign('/login');
+};
+
+export const subscribeAuthSession = (callback: () => void) => {
+  if (typeof window === 'undefined') {
+    return () => {};
+  }
+
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === AUTH_STORAGE_KEY) {
+      callback();
+    }
+  };
+
+  window.addEventListener('storage', onStorage);
+  window.addEventListener(AUTH_SESSION_EVENT, callback);
+  return () => {
+    window.removeEventListener('storage', onStorage);
+    window.removeEventListener(AUTH_SESSION_EVENT, callback);
+  };
 };
 
 export const getAuthorizationHeader = (): HeadersInit => {

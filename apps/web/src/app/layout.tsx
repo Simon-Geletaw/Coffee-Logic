@@ -1,21 +1,13 @@
 import type { Metadata } from "next";
-import { DM_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-
-const bodySans = DM_Sans({
-  variable: "--font-body-sans",
-  subsets: ["latin"],
-});
-
-const headingSans = Space_Grotesk({
-  variable: "--font-heading-sans",
-  subsets: ["latin"],
-});
+import { ToastProvider } from "@/features/ui/toast";
 
 export const metadata: Metadata = {
   title: "Admin",
   description: "Admin",
 };
+
+export const dynamic = 'force-dynamic';
 
 export default function RootLayout({
   children,
@@ -24,8 +16,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${bodySans.variable} ${headingSans.variable} antialiased`}>
-        {children}
+      <body className="antialiased">
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

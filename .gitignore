@@ -1,3 +1,7 @@
 node_modules
 
 /generated/prisma
+
+# Local scratch files created during debugging
+.tmp-*
+.tmp-dir/

@@ -1,41 +1,49 @@
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Strategy } from 'passport-jwt';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { AuthTokenPayloadDto, UserRole } from '../dto/validate-user.dto';
+
+
+type AuthenticatedUser = {
+  userId: string;
+  email: string;
+  role: UserRole;
+};
+
 @Injectable()
 export class JwtAuthStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly prisma: PrismaService) {
-	super({
-    // jwtFromRequest, secretOrKey, etc. should be configured here
-    secretOrKey: process.env.JWT_SECRET ?? process.env.Secret_JWT,
-    jwtFromRequest: (req: any) => {
-        if (!req || !req.headers) {
-            return null;
-        }
-        const authHeader = req.headers['authorization'];
-        if (!authHeader) {
-            return null;
-        }
-        const [type, token] = authHeader.split(' ');
-        if (type !== 'Bearer' || !token) {
-            return null;
-        }
-        return token;
-
+    const jwtSecret = process.env.JWT_SECRET ?? process.env.Secret_JWT;
+    if (!jwtSecret) {
+      throw new Error('JWT secret is missing. Set JWT_SECRET (or Secret_JWT).');
     }
 
-    }
-
-  );}
-  async validate(payload: any) {
-    return payload; // You can add more user validation logic here if needed
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      secretOrKey: jwtSecret,
+    });
   }
-    private tokenExtractorFromHeader(request: Request): string | undefined {
-        if (!request) {
-            return undefined;
-        }
-        const [type, token] = request.headers.get?.('authorization')?.split(' ') ?? [];
-        return type === 'Bearer' && token ? token : undefined;
-    }}
 
-   
+  async validate(payload: AuthTokenPayloadDto): Promise<AuthenticatedUser> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isActive: true,
+      },
+    });
+
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Invalid or inactive user');
+    }
+
+    return {
+      userId: user.id,
+      email: user.email,
+      role: user.role as UserRole,
+    };
+  }
+}

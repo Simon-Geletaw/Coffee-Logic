@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
+import * as bcrypt from 'bcrypt';
 type UserReturnData={
     firstName:string;
     lastName:string;
@@ -47,13 +48,14 @@ export class UserService {
                     message:'Email already exists'
                 }
             }
+            const passwordHash = await bcrypt.hash(userData.passwordHash, 10);
             const user= await this.prisma.user.create({
                 data:{
                     firstName:userData.firstName,
                     lastName:userData.lastName,
                     email:userData.email,
                     phoneNumber:userData.phoneNumber,
-                    passwordHash:userData.passwordHash,
+                    passwordHash,
                     role:userData.role,
                     defaultAddress:userData.defaultAddress,
                 }});

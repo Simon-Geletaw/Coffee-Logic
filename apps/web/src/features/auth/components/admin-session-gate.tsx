@@ -1,9 +1,10 @@
 'use client';
 
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getAuthSession, type AuthRole, type AuthSession } from '../storage';
+import { type AuthRole } from '../storage';
+import { useAuthSession } from '../hooks/use-auth-session';
 
 type AdminSessionGateProps = {
   children: ReactNode;
@@ -12,19 +13,19 @@ type AdminSessionGateProps = {
 
 export function AdminSessionGate({ children, requiredRole }: AdminSessionGateProps) {
   const router = useRouter();
-  const [session, setSession] = useState<AuthSession | null>(null);
-  const [loading, setLoading] = useState(true);
+  const session = useAuthSession();
 
   useEffect(() => {
-    const stored = getAuthSession();
-    if (!stored) {
-      router.replace('/login');
+    if (session) {
       return;
     }
 
-    setSession(stored);
-    setLoading(false);
-  }, [router]);
+    const id = window.setTimeout(() => {
+      router.replace('/login');
+    }, 0);
+
+    return () => window.clearTimeout(id);
+  }, [router, session]);
 
   const roleAllowed = useMemo(() => {
     if (!requiredRole || !session) {
@@ -34,16 +35,12 @@ export function AdminSessionGate({ children, requiredRole }: AdminSessionGatePro
     return session.user.role === requiredRole;
   }, [requiredRole, session]);
 
-  if (loading) {
+  if (!session) {
     return (
       <div className="panel p-6 text-sm text-slate-600">
         Admin
       </div>
     );
-  }
-
-  if (!session) {
-    return null;
   }
 
   if (!roleAllowed) {
