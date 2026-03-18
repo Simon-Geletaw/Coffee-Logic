@@ -1,5 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    InternalServerErrorException,
+    NotFoundException,
+    PreconditionFailedException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateProductDto } from 'src/products/dto/create-product.dto';
 
 type productAttribute = {
     roastLevel?: string;
@@ -50,16 +57,16 @@ export class ProductService {
         return products.map((product) => ({
             id: product.id,
             name: product.name,
-            roast: product.roastLevel,
+            roastLevel: product.roastLevel,
             grind: product.grind,
             origin: product.origin,
             process: product.process,
             caffeine: product.caffeine,
         }));
     }
-    async createProduct(product: productAttribute) {
+    async createProduct(product: CreateProductDto) {
         if (!product.name) {
-            throw new (await import('@nestjs/common')).PreconditionFailedException('Product name is required');
+            throw new PreconditionFailedException('Product name is required');
         }
         const newProduct = await this.prisma.product.create({
             data: {
@@ -76,9 +83,42 @@ export class ProductService {
     });     
     return newProduct;
     }
+
+    async createProducts(products: CreateProductDto[]) {
+        if (!Array.isArray(products) || products.length === 0) {
+            throw new BadRequestException('Products payload must be a non-empty array');
+        }
+
+        const createdProducts: Array<Awaited<ReturnType<typeof this.prisma.product.create>>> = [];
+        for (const product of products) {
+            if (!product.name) {
+                throw new PreconditionFailedException('Each product requires a name');
+            }
+            const created = await this.prisma.product.create({
+                data: {
+                    name: product.name,
+                    roastLevel: product.roastLevel ?? '',
+                    grind: product.grind ?? '',
+                    origin: product.origin ?? '',
+                    process: product.process ?? '',
+                    caffeine: product.caffeine ?? '',
+                    description: product.description ?? '',
+                    isActive: true,
+                },
+            });
+            createdProducts.push(created);
+        }
+
+        return {
+            status: 201,
+            count: createdProducts.length,
+            products: createdProducts,
+        };
+    }
+
     async updateProduct(id: string, updatesProduct: productAttribute = {}) {
         if (!id) {
-            throw new (await import('@nestjs/common')).BadRequestException('Product id is required');
+            throw new BadRequestException('Product id is required');
         }
 
         const existingProduct = await this.prisma.product.findUnique({
@@ -94,7 +134,7 @@ export class ProductService {
             },
         });
         if (!existingProduct) {
-            throw new (await import('@nestjs/common')).NotFoundException('Product not found');
+            throw new NotFoundException('Product not found');
         }
         const updatedProduct = await this.prisma.product.update({
             where: { id:existingProduct.id },
@@ -112,7 +152,7 @@ export class ProductService {
              }
         async deleteProduct(id: string) {
             if (!id) {
-                throw new (await import('@nestjs/common')).BadRequestException('Product id is required');
+                throw new BadRequestException('Product id is required');
             }
             const findtobeDeletedProduct = await this.prisma.product.findUnique({
                 where: { id },
@@ -122,13 +162,13 @@ export class ProductService {
                 
             });
             if (!findtobeDeletedProduct) {
-                throw new (await import('@nestjs/common')).NotFoundException('Product not found');
+                throw new NotFoundException('Product not found');
             }
             const DeletedProduct=await this.prisma.product.update({
                 where: { id: findtobeDeletedProduct.id },
                 data: {isActive: false},});
             if (!DeletedProduct) {
-                throw new (await import('@nestjs/common')).InternalServerErrorException('Failed to delete product');
+                throw new InternalServerErrorException('Failed to delete product');
             }
             if (!DeletedProduct.isActive) {
                 return {

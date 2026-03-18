@@ -1,23 +1,30 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { ToastProvider } from "@/features/ui/toast";
+import type { Metadata } from 'next';
+import { Space_Grotesk, IBM_Plex_Mono } from 'next/font/google';
+import './globals.css';
+import { Providers } from '@/components/providers';
+
+const headingFont = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-heading',
+  weight: ['500', '700'],
+});
+
+const monoFont = IBM_Plex_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  weight: ['400', '500'],
+});
 
 export const metadata: Metadata = {
-  title: "Admin",
-  description: "Admin",
+  title: 'Coffee Logic Admin',
+  description: 'Security-first admin control panel for Coffee Logic.',
 };
 
-export const dynamic = 'force-dynamic';
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className="antialiased">
-        <ToastProvider>{children}</ToastProvider>
+      <body className={`${headingFont.variable} ${monoFont.variable}`}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

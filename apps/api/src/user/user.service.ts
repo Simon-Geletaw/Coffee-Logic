@@ -4,9 +4,11 @@ import { User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 type UserReturnData={
+    id:string;
     firstName:string;
     lastName:string;
     email:string;
+    role:string;
 }
 type UserCreateData={
     firstName:string;
@@ -27,9 +29,11 @@ export class UserService {
     async getAllUsers():Promise<UserReturnData[]>{
         const user:UserReturnData[]=await this.prisma.user.findMany({
             select:{
+                id:true,
                 email:true,
                 firstName:true,
                 lastName:true,
+                role:true,
                 }
             });
         return user;};
@@ -72,4 +76,25 @@ export class UserService {
                     }
                 }
        
-        }}
+        }
+
+        async deleteUser(id: string): Promise<ServiceResponse> {
+            const deletedUser = await this.prisma.user.deleteMany({
+                where: {
+                    id,
+                },
+            });
+
+            if (deletedUser.count === 0) {
+                return {
+                    status: 404,
+                    message: 'User not found',
+                };
+            }
+
+            return {
+                status: 200,
+                message: 'User deleted successfully',
+            };
+        }
+}

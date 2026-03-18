@@ -8,33 +8,18 @@ type GlobalErrorProps = {
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
   return (
     <html lang="en">
-      <body className="antialiased">
-        <main className="app-shell">
-          <div className="page-wrap">
-            <section className="panel p-6 md:p-7">
-              <span className="chip">Admin</span>
-              <h1 className="mt-4 text-2xl font-semibold text-slate-900 md:text-3xl">Something went wrong</h1>
-              <p className="mt-3 text-sm text-slate-600">
-                An unexpected error occurred while rendering this page.
-              </p>
-              <div className="mt-5 flex flex-wrap items-center gap-3">
-                <button type="button" className="btn-primary" onClick={() => reset()}>
-                  Try again
-                </button>
-                <a className="btn-secondary inline-flex items-center px-4 py-2" href="/login">
-                  Go to login
-                </a>
-              </div>
-              {error?.message ? (
-                <pre className="mt-6 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700">
-                  {error.message}
-                </pre>
-              ) : null}
-            </section>
-          </div>
+      <body>
+        <main>
+          <section className="panel p-6">
+            <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">Admin</p>
+            <h1 className="mt-2 text-2xl font-bold">Unexpected error</h1>
+            <p className="mt-2 text-sm text-[color:var(--muted)]">{error.message || 'Something failed while rendering this page.'}</p>
+            <button type="button" className="btn btn-primary mt-4" onClick={() => reset()}>
+              Retry
+            </button>
+          </section>
         </main>
       </body>
     </html>
   );
 }
-

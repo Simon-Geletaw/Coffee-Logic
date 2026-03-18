@@ -37,22 +37,10 @@
     "**/*.mts",
     ".next-web/types/**/*.ts",
     ".next-web/dev/types/**/*.ts",
-    ".next-web-dev-1252/types/**/*.ts",
-    ".next-web-dev-1252/dev/types/**/*.ts",
-    ".next-web-dev-16520/types/**/*.ts",
-    ".next-web-dev-16520/dev/types/**/*.ts",
-    ".next-web-dev-30776/types/**/*.ts",
-    ".next-web-dev-30776/dev/types/**/*.ts",
-    ".next-web-dev-15240/types/**/*.ts",
-    ".next-web-dev-15240/dev/types/**/*.ts",
-    ".next-web-dev-22080/types/**/*.ts",
-    ".next-web-dev-22080/dev/types/**/*.ts",
-    ".next-web-dev-15788/types/**/*.ts",
-    ".next-web-dev-15788/dev/types/**/*.ts",
-    ".next-web-dev-17896/types/**/*.ts",
-    ".next-web-dev-17896/dev/types/**/*.ts",
-    ".next-web-dev-27728/types/**/*.ts",
-    ".next-web-dev-27728/dev/types/**/*.ts"
+    ".next-web-dev-*/types/**/*.ts",
+    ".next-web-dev-*/dev/types/**/*.ts",
+    ".next-web-dev-27380/types/**/*.ts",
+    ".next-web-dev-27380/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
