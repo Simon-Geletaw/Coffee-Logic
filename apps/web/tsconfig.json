@@ -40,7 +40,9 @@
     ".next-web-dev-*/types/**/*.ts",
     ".next-web-dev-*/dev/types/**/*.ts",
     ".next-web-dev-27380/types/**/*.ts",
-    ".next-web-dev-27380/dev/types/**/*.ts"
+    ".next-web-dev-27380/dev/types/**/*.ts",
+    ".next-web-dev-29828/types/**/*.ts",
+    ".next-web-dev-29828/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

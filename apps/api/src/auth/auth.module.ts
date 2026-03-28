@@ -4,13 +4,18 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtAuthStrategy } from './strategy/jwt.strategy';
+import { ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
-    JwtModule.register({
-      secret: process.env.JWT_SECRET ?? process.env.Secret_JWT,
-      signOptions: { expiresIn: '1h' },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '1h' },
+      }),
+      inject: [ConfigService],
     }),
-    
   ],
   controllers: [AuthController],
   providers: [AuthService, PrismaService, JwtAuthStrategy],

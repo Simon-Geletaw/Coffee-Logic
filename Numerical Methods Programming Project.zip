@@ -1,0 +1,805 @@
+# Coffee Logic — Senior Developer Toolkit & Teaching Guide
+
+> You are learning to think like a senior developer, not just write code.
+> The difference is not syntax knowledge — it's knowing **why** a decision was made,
+> **what it costs**, and **how it fails**.
+
+---
+
+## Section 1: The Mindset Shift (Junior → Senior)
+
+| Junior Thinks | Senior Thinks |
+|---|---|
+| "Does this code work?" | "Does this code fail correctly?" |
+| "I'll add a comment explaining this" | "I'll rename this so it explains itself" |
+| "Let me fix this bug" | "Let me find why this class of bug is possible" |
+| "My feature is done" | "My feature is testable, observable, and reversible" |
+| "The tests pass" | "The tests prove the right thing" |
+| "It works on my machine" | "It works the same everywhere because of env validation" |
+| "I'll clean it up later" | "Later never comes — clean it now" |
+| "The PR looks good" | "What does this code do under failure conditions?" |
+
+**The senior developer's question at every step**: *"What happens when this goes wrong?"*
+
+---
+
+## Section 2: Your Full Technology Stack — Deep Explanations
+
+### 2.1 TypeScript — The Language of Your Project
+
+**What it is**: TypeScript is JavaScript with a type system layered on top. It compiles to plain JavaScript. The types exist at compile time only — at runtime, your code is standard JavaScript.
+
+**The critical distinction you must understand**:
+```
+TypeScript types     → compile-time safety → caught by tsc
+class-validator      → runtime enforcement → caught by ValidationPipe
+Zod schemas          → runtime enforcement → caught when you call .parse()
+```
+
+You need ALL THREE in a production app. TypeScript catches developer mistakes during coding. class-validator catches bad API inputs at runtime. Zod catches bad env vars and external data at runtime.
+
+**Beginner trap**: Thinking TypeScript makes your app safe. It does NOT. A TypeScript type of `string` on a field doesn't stop someone from sending `null` in a POST request body. That's what `class-validator` and `Zod` are for.
+
+**The types you must master for this project**:
+
+```typescript
+// 1. Union types — "this OR that"
+type OrderStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+
+// 2. Discriminated unions — the key to safe error handling
+type Result<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: string };
+
+// 3. Mapped types — transform every field
+type Optional<T> = { [K in keyof T]?: T[K] };  // same as Partial<T>
+type Readonly<T> = { readonly [K in keyof T]: T[K] };
+
+// 4. Template literal types — string composition with safety
+type EventName = `${string}.${'created' | 'updated' | 'deleted'}`;
+// Valid: 'product.created'  Invalid: 'product.destroyed'
+
+// 5. Conditional types — "if T extends X, then Y, else Z"
+type NonNullable<T> = T extends null | undefined ? never : T;
+
+// 6. The 'satisfies' operator (TS 4.9+) — validate without widening
+const config = {
+  port: 3001,
+  env: 'development',
+} satisfies Record<string, string | number>;
+// config.port is still inferred as number, not string | number
+```
+
+**Tools for TypeScript**:
+- `tsc --noEmit` — type-check without compiling. Run this in CI.
+- `tsconfig.json` options you MUST understand:
+  - `"strict": true` — enables all safety checks. Never turn this off.
+  - `"noImplicitAny": true` — no implicit `any` types allowed
+  - `"strictNullChecks": true` — `null` and `undefined` are NOT subtypes of everything
+  - `"paths"` — module aliases (e.g., `src/` → `@/`) so you don't write `../../..`
+
+---
+
+### 2.2 NestJS — The Backend Framework
+
+**What it is**: NestJS is an opinionated Node.js framework built on Express (or Fastify). It uses TypeScript decorators and Angular-style dependency injection.
+
+**The NestJS Request Pipeline** — you must memorize this:
+
+```
+Incoming HTTP Request
+        ↓
+1. Middleware        (express-style, runs before NestJS lifecycle)
+        ↓
+2. Guards           (can you access this? JWT check, role check)
+        ↓
+3. Interceptors     (before handler — request logging, timing)
+        ↓
+4. Pipes            (transform and validate input — ValidationPipe)
+        ↓
+5. Controller       (route handler — delegates to service)
+        ↓
+6. Service          (business logic)
+        ↓
+7. Interceptors     (after handler — response shaping, caching)
+        ↓
+8. Exception Filter (catches any thrown exception, formats error)
+        ↓
+Outgoing HTTP Response
+```
+
+If you understand this pipeline, you can debug ANY NestJS issue. A request not reaching the controller? Check Guards. Validation not running? Check Pipes registration. Error response wrong shape? Check Exception Filter.
+
+**Dependency Injection (DI)** — the core of NestJS:
+
+DI means you don't create service instances yourself with `new`. You declare what you need, and NestJS creates and provides it. This is what `constructor(private readonly prisma: PrismaService)` does.
+
+```typescript
+// ❌ Without DI — you manage instances
+class AuthService {
+  private prisma = new PrismaService(); // tightly coupled, hard to test
+}
+
+// ✅ With DI — NestJS manages instances
+@Injectable()
+class AuthService {
+  constructor(private readonly prisma: PrismaService) {} // injected, easy to mock in tests
+}
+```
+
+The benefit for testing: in unit tests, you inject a FAKE PrismaService that returns mock data. Your AuthService never knows the difference.
+
+**Decorators** — the syntax that looks like `@Something()`:
+
+Decorators are functions that run at class/method/parameter definition time. They attach metadata. NestJS reads this metadata to wire up routes, guards, pipes, etc.
+
+```typescript
+@Controller('auth')         // → registers this class as a controller for /auth prefix
+@UseGuards(JwtAuthGuard)    // → runs JwtAuthGuard on every method in this class
+@Post('login')              // → handles POST /auth/login
+@Body() dto: LoginDto       // → extracts req.body and validates it as LoginDto
+```
+
+**Tools for NestJS**:
+- `nest generate module inventory` — scaffolds a module
+- `nest generate service inventory` — scaffolds a service
+- `nest generate controller inventory` — scaffolds a controller
+- `nest build` — compiles TypeScript to JavaScript
+- `nest start:dev` — watch mode, rebuilds on file change
+
+---
+
+### 2.3 Prisma — The Database Layer
+
+**What it is**: Prisma is a TypeScript ORM (Object-Relational Mapper). You define your data model in `schema.prisma`, run `prisma migrate dev`, and Prisma generates a fully-typed client.
+
+**The Prisma workflow every developer must know**:
+
+```
+1. Edit schema.prisma
+2. npx prisma migrate dev --name describe-your-change
+3. Prisma generates SQL migration file
+4. Prisma applies migration to your local DB
+5. Prisma regenerates the client with new types
+6. Your TypeScript code now has type-safe access to new fields
+```
+
+**Key Prisma operations for your project**:
+
+```typescript
+// findUnique — one record by unique field, returns null if not found
+const user = await prisma.user.findUnique({ where: { email } });
+
+// findFirst — first matching record
+const batch = await prisma.batch.findFirst({
+  where: { productId, roastDate: { gte: cutoffDate } },
+  orderBy: { roastDate: 'desc' }
+});
+
+// create — insert one record
+const product = await prisma.product.create({ data: { name, origin } });
+
+// update — update by unique field (throws if not found)
+const updated = await prisma.product.update({
+  where: { id },
+  data: { isActive: false }
+});
+
+// upsert — update if exists, create if not (idempotent operations)
+const inventory = await prisma.inventory.upsert({
+  where: { batchId },
+  update: { available: { decrement: quantity } },
+  create: { batchId, onHand: 100, reserved: quantity, available: 100 - quantity }
+});
+
+// transaction — multiple operations that succeed or fail together
+const [order, inventoryUpdate] = await prisma.$transaction([
+  prisma.order.create({ data: orderData }),
+  prisma.inventory.update({ where: { batchId }, data: { reserved: { decrement: qty } } })
+]);
+```
+
+**Prisma error codes you must know**:
+- `P2002` — Unique constraint violation (email already exists)
+- `P2025` — Record not found (update/delete on non-existent record)
+- `P2003` — Foreign key constraint violation (referencing non-existent parent)
+
+**In your global exception filter, catch these**:
+```typescript
+if (error instanceof Prisma.PrismaClientKnownRequestError) {
+  if (error.code === 'P2002') throw new ConflictException('Record already exists');
+  if (error.code === 'P2025') throw new NotFoundException('Record not found');
+}
+```
+
+**Tools for Prisma**:
+- `npx prisma studio` — GUI browser for your database (localhost:5555)
+- `npx prisma migrate dev` — create and apply migration
+- `npx prisma migrate deploy` — apply migrations in production (no interactive prompts)
+- `npx prisma db seed` — run seed script to populate dev data
+- `npx prisma generate` — regenerate client without migrating
+
+---
+
+### 2.4 Zod — Runtime Schema Validation
+
+**What it is**: Zod is a TypeScript-first validation library. It validates data at runtime AND generates TypeScript types from the schema — one source of truth.
+
+**Why not just use `class-validator`?** class-validator uses decorators on classes, which requires `reflect-metadata` and TypeScript experimental decorators. It's tied to NestJS's class-based system. Zod works with plain objects — ideal for frontend code, env validation, and any non-NestJS context.
+
+**Zod patterns you'll use in this project**:
+
+```typescript
+import { z } from 'zod';
+
+// Basic schema
+const userSchema = z.object({
+  email: z.email(),
+  role: z.enum(['admin', 'manager', 'operator', 'viewer']),
+  passwordHash: z.string().min(8),
+});
+
+// Derive the TypeScript type from the schema — no duplication
+type User = z.infer<typeof userSchema>;
+
+// Parse (throwing) vs safeParse (Result)
+const result = userSchema.safeParse(unknownData);
+if (!result.success) {
+  console.log(result.error.issues);  // detailed field-level errors
+} else {
+  console.log(result.data);  // typed, validated data
+}
+
+// Env validation schema
+const envSchema = z.object({
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  DATABASE_URL: z.string().startsWith('postgresql://'),
+  PORT: z.coerce.number().default(3001),  // coerce: "3001" string → 3001 number
+  NODE_ENV: z.enum(['development', 'staging', 'production']).default('development'),
+});
+```
+
+**The `.coerce` feature** is critical for env vars — all environment variables are strings. `z.coerce.number()` converts `"3001"` to `3001` automatically.
+
+---
+
+### 2.5 React Query (`@tanstack/react-query`) — Server State Management
+
+**What it is**: React Query manages "server state" — data that lives on the server and needs to be fetched, cached, and kept in sync. It's NOT a global state manager like Redux. It's a smart async cache.
+
+**The mental model**:
+
+```
+useQuery  → "Give me this data, keep it fresh, tell me loading/error states"
+useMutation → "Send this data to the server, then invalidate related cache"
+```
+
+**Cache invalidation** — the key concept:
+
+```typescript
+const queryClient = useQueryClient();
+
+const createMutation = useMutation({
+  mutationFn: createProduct,
+  onSuccess: () => {
+    // Tell React Query: the product list is stale, refetch it
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+  }
+});
+```
+
+When you call `invalidateQueries`, React Query marks all matching queries as stale and refetches them automatically. This keeps your UI in sync with the server without manual state management.
+
+**Query key design** — this matters more than you think:
+
+```typescript
+// ❌ Bad — too broad, refetches everything when any product changes
+queryKey: ['data']
+
+// ✅ Good — granular, only refetches affected data
+queryKey: ['products']                          // all products
+queryKey: ['products', { roastLevel: 'dark' }]  // filtered products
+queryKey: ['products', productId]               // single product
+queryKey: ['users']                             // all users
+```
+
+The hierarchy matters: `invalidateQueries({ queryKey: ['products'] })` invalidates ALL queries starting with `'products'`.
+
+---
+
+### 2.6 `react-hook-form` + Zod Resolver — Form Management
+
+**What it is**: `react-hook-form` manages form state without re-rendering the entire form on each keystroke (uncontrolled inputs). The Zod resolver connects your Zod schema to the form for validation.
+
+**The pattern in your login page is correct — study it**:
+
+```typescript
+const { register, handleSubmit, formState } = useForm<LoginInput>({
+  resolver: zodResolver(loginSchema),  // Zod validates on submit
+  defaultValues: { email: '', password: '' }
+});
+```
+
+`register('email')` attaches the input to the form (onChange, onBlur, ref). `handleSubmit()` validates before calling your handler. `formState.errors` contains field-level error messages from Zod.
+
+---
+
+### 2.7 Stripe — Payment Processing
+
+**What it is**: Stripe is a payment processing API. You never handle card numbers (PCI compliance is Stripe's problem). You create "sessions" and "intents", users interact with Stripe's UI, Stripe tells you what happened via webhooks.
+
+**The critical Stripe concept — Webhooks**:
+
+Stripe communicates asynchronously. When a payment succeeds, Stripe calls YOUR API with an HTTP POST containing the event. You must:
+1. Verify the webhook signature (proves it came from Stripe)
+2. Handle it idempotently (same event arrives twice → only processed once)
+3. Return HTTP 200 immediately (Stripe will retry if you return an error)
+
+```typescript
+// Webhook signature verification — NEVER skip this
+const event = stripe.webhooks.constructEvent(
+  rawBody,         // must be raw bytes, not parsed JSON
+  signature,       // from 'stripe-signature' header
+  webhookSecret    // from your .env
+);
+```
+
+**Stripe SDK installation**: `pnpm add stripe` in `apps/api`
+
+**Test tools**:
+- Stripe Dashboard (test mode) — view test events
+- `stripe listen --forward-to localhost:3001/webhooks/stripe` — Stripe CLI forwards webhook events to your local dev server
+
+---
+
+## Section 3: Documentation Practices
+
+### 3.1 Code Documentation — What, Why, and How
+
+**Rule**: Code should be self-documenting. Comments explain WHY, not WHAT.
+
+```typescript
+// ❌ Bad comment — restates what the code does
+// Check if password is valid
+const isValid = await bcrypt.compare(password, hash);
+
+// ✅ Good comment — explains a non-obvious decision
+// We use the same error message for "user not found" and "wrong password"
+// to prevent user enumeration attacks (knowing which emails are registered)
+if (!user || !isPasswordValid) {
+  throw new UnauthorizedException('Invalid email or password');
+}
+```
+
+**JSDoc for public APIs** — add JSDoc to service methods that other teams consume:
+
+```typescript
+/**
+ * Computes the peak freshness window for a coffee batch.
+ *
+ * @param roastDate - The date the batch was roasted
+ * @param windowStartDays - Days after roast when peak begins (default: 7)
+ * @param windowEndDays - Days after roast when peak ends (default: 21)
+ * @returns FreshnessStatus with isPeak flag and window boundaries
+ *
+ * @example
+ * const status = isPeakFreshness(new Date('2024-01-01'));
+ * // { isPeak: true, daysPostRoast: 10, peakStart: ..., peakEnd: ... }
+ */
+```
+
+### 3.2 Architecture Decision Records (ADRs)
+
+**What they are**: Short documents recording WHY a technical decision was made. Future you (and teammates) will thank you.
+
+Create a `docs/decisions/` folder. Each ADR is a markdown file:
+
+```markdown
+# ADR-001: Use JWT over session cookies for admin auth
+
+## Status: Accepted
+## Date: 2026-03-28
+
+## Context
+We need authentication for the admin API. Options considered:
+1. HttpOnly session cookies
+2. JWT in Authorization header
+3. OAuth
+
+## Decision
+Use JWT Bearer tokens stored in sessionStorage on the frontend.
+
+## Consequences
+- No CSRF protection needed (JWT in header, not cookie)
+- XSS risk if sessionStorage is compromised
+- Simple to implement across web and future mobile clients
+- Token cannot be revoked until expiry (acceptable for admin-only use)
+
+## Future
+When public user auth is added, reconsider httpOnly cookies + CSRF.
+```
+
+### 3.3 OpenAPI / Swagger Documentation
+
+NestJS can auto-generate API documentation from your decorators. Install:
+```bash
+pnpm add @nestjs/swagger swagger-ui-express
+```
+
+Then add to your `main.ts`:
+```typescript
+const config = new DocumentBuilder()
+  .setTitle('Coffee Logic API')
+  .setDescription('Coffee Logic admin and storefront API')
+  .setVersion('1.0')
+  .addBearerAuth()
+  .build();
+const document = SwaggerModule.createDocument(app, config);
+SwaggerModule.setup('api/docs', app, document);
+```
+
+Visit `http://localhost:3001/api/docs` to see interactive API documentation. Your team and future self will use this daily.
+
+Add `@ApiProperty()` decorators to your DTOs for richer docs:
+```typescript
+export class CreateProductDto {
+  @ApiProperty({ example: 'Ethiopian Yirgacheffe', description: 'Product display name' })
+  @IsString()
+  name: string;
+}
+```
+
+### 3.4 Environment Documentation
+
+Create `.env.example` — a copy of `.env` with values replaced by descriptions:
+
+```bash
+# PostgreSQL connection string
+DATABASE_URL=postgresql://user:password@localhost:5432/coffee_logic
+
+# JWT signing secret — minimum 32 characters, generate with: openssl rand -hex 32
+JWT_SECRET=your_secret_here
+
+# Server port
+PORT=3001
+
+# Stripe keys — get from dashboard.stripe.com (use test keys for development)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Environment: development | staging | production
+NODE_ENV=development
+```
+
+Commit `.env.example` to git. Never commit actual `.env`.
+
+---
+
+## Section 4: Git Workflow & Conventional Commits
+
+### 4.1 Conventional Commits — The Standard
+
+Format: `type(scope): description`
+
+| Type | When to Use | Example |
+|---|---|---|
+| `feat` | New feature | `feat(auth): add rate limiting to login endpoint` |
+| `fix` | Bug fix | `fix(auth): check isActive before issuing JWT` |
+| `refactor` | Code change with no behavior change | `refactor(prisma): create @Global PrismaModule` |
+| `test` | Adding or fixing tests | `test(auth): add E2E auth matrix tests` |
+| `chore` | Build, CI, tooling | `chore(ci): add GitHub Actions pipeline` |
+| `docs` | Documentation only | `docs(readme): add deployment instructions` |
+| `perf` | Performance improvement | `perf(products): add index on roastLevel column` |
+| `style` | Formatting, no logic change | `style: run prettier on all files` |
+
+**Why this matters**: When you look at git log 3 months from now, conventional commits tell you exactly what changed and why. CI tools (semantic-release) can auto-generate changelogs from them.
+
+### 4.2 Branch Strategy
+
+```
+main          ← production-ready only, protected branch
+dev           ← integration branch for daily work
+feat/module-name    ← feature branches (merge into dev)
+fix/bug-description ← bug fix branches
+```
+
+```bash
+# Start a new module
+git checkout -b feat/config-module
+
+# After completing the module
+git add .
+git commit -m "feat(config): add centralized env validation with Zod"
+git push origin feat/config-module
+# Open PR → dev
+```
+
+### 4.3 The Professional Git Mindset
+
+**Each commit should**:
+- Build and pass tests
+- Represent one logical change
+- Have a message a stranger can understand 6 months later
+
+**Use `git diff --staged` before every commit** to review exactly what you're committing. This catches accidental `console.log`, debug code, or `.env` files.
+
+---
+
+## Section 5: Debugging Like a Senior Developer
+
+### 5.1 The Debugging Protocol
+
+When something doesn't work, professionals follow this order:
+
+1. **Read the error message word by word** — most juniors skip this and guess
+2. **Identify which pipeline layer failed** — guard? pipe? service? Look at the stack trace
+3. **Add logging at the layer before the failure** — narrow the scope
+4. **Check the types** — TypeScript might be hiding a type error you didn't notice
+5. **Test in isolation** — write a small test that reproduces the bug
+
+### 5.2 NestJS-Specific Debug Tricks
+
+```typescript
+// Add structured logging to identify which layer is executing
+@Injectable()
+export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
+  async validateUser(dto: LoginDto) {
+    this.logger.debug(`Login attempt for: ${dto.email}`);
+    // ...
+    this.logger.log(`Login successful for: ${user.id}`);
+  }
+}
+```
+
+NestJS has a built-in `Logger` class. Use it instead of `console.log` — it includes timestamps, context, and level filtering.
+
+**Test a single endpoint with curl**:
+```bash
+# Test login
+curl -X POST http://localhost:3001/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@test.com","password":"Password123!"}' \
+  | json_pp
+
+# Test protected route
+curl -X GET http://localhost:3001/admin/products/list \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  | json_pp
+```
+
+### 5.3 Database Debugging
+
+```bash
+# Open Prisma Studio (visual DB browser)
+npx prisma studio
+
+# Connect to Postgres directly (if you have psql)
+psql postgresql://coffee:coffee@localhost:7000/coffee_logic
+
+# Check what queries Prisma is running (in .env)
+# Add: &log=query to DATABASE_URL or use Prisma's log option:
+const prisma = new PrismaClient({ log: ['query', 'warn', 'error'] });
+```
+
+---
+
+## Section 6: Code Quality Tools
+
+### 6.1 ESLint — Code Quality
+
+Your project has ESLint configured in `eslint.config.mjs`. Key rules for production:
+
+```javascript
+// Rules every senior developer enforces:
+'@typescript-eslint/no-explicit-any': 'error',      // no any
+'@typescript-eslint/no-unused-vars': 'error',        // no dead code
+'@typescript-eslint/explicit-return-type': 'warn',   // document return types
+'no-console': 'warn',                                // use Logger instead
+```
+
+Run: `pnpm -C apps/api lint`
+
+### 6.2 Prettier — Code Formatting
+
+Your project has `.prettierrc`. Prettier auto-formats code. Never argue about formatting — let the tool decide.
+
+Run: `pnpm -C apps/api format`
+
+**Configure your editor** (VS Code): Install "Prettier - Code formatter" extension. Set `"editor.formatOnSave": true` in VS Code settings. Now your code formats automatically on every save.
+
+### 6.3 VS Code Extensions for This Stack
+
+| Extension | Why You Need It |
+|---|---|
+| `Prisma` | Syntax highlighting and formatting for `.prisma` files |
+| `ESLint` | Inline linting errors as you type |
+| `Prettier` | Auto-format on save |
+| `Thunder Client` | HTTP client built into VS Code (like Postman) |
+| `GitLens` | See who wrote every line and when |
+| `Error Lens` | Shows error messages inline next to the code |
+| `TypeScript Hero` | Auto-imports and organizes imports |
+| `Tailwind CSS IntelliSense` | Autocomplete for Tailwind classes |
+
+### 6.4 Postman / Thunder Client — API Testing
+
+Before writing E2E tests, test your endpoints interactively. Create a Postman collection with:
+1. Environment variables: `base_url`, `admin_token`
+2. A "Login" request that saves the response token to `admin_token` automatically:
+   ```javascript
+   // In Postman Tests tab:
+   const response = pm.response.json();
+   pm.environment.set('admin_token', response.token);
+   ```
+3. All subsequent requests use `{{admin_token}}` in the Authorization header
+
+This makes manual testing fast and repeatable.
+
+---
+
+## Section 7: Testing Strategy (Full Pyramid)
+
+### 7.1 The Test Pyramid
+
+```
+        /\
+       /  \   E2E Tests (few, slow, high confidence)
+      /----\
+     /      \ Integration Tests (moderate, test DB interactions)
+    /--------\
+   /          \ Unit Tests (many, fast, test pure logic)
+  /------------\
+```
+
+Write LOTS of unit tests (fast, no DB, no HTTP). Write SOME integration tests (with test DB). Write FEW E2E tests (full app, catches regressions).
+
+### 7.2 Unit Test Structure — the AAA Pattern
+
+Every test follows Arrange → Act → Assert:
+
+```typescript
+describe('isPeakFreshness', () => {
+  it('should return isPeak=true when batch is within peak window', () => {
+    // Arrange — set up the scenario
+    const roastDate = new Date('2026-01-01');
+    const now = new Date('2026-01-10');  // 9 days post-roast (within 7-21 window)
+
+    // Act — execute the function
+    const result = isPeakFreshness(roastDate, now);
+
+    // Assert — verify the outcome
+    expect(result.isPeak).toBe(true);
+    expect(result.daysPostRoast).toBe(9);
+  });
+
+  it('should return isPeak=false when batch is before peak window', () => {
+    const roastDate = new Date('2026-01-01');
+    const now = new Date('2026-01-03');  // 2 days post-roast (before 7-day start)
+    expect(isPeakFreshness(roastDate, now).isPeak).toBe(false);
+  });
+});
+```
+
+### 7.3 Mocking in NestJS
+
+When unit-testing a service that depends on PrismaService, you don't hit the real database. You mock it:
+
+```typescript
+const mockPrisma = {
+  user: {
+    findUnique: jest.fn(),  // returns undefined by default
+    create: jest.fn(),
+  }
+};
+
+const module = await Test.createTestingModule({
+  providers: [
+    AuthService,
+    { provide: PrismaService, useValue: mockPrisma }  // inject the mock
+  ]
+}).compile();
+
+// In your test:
+mockPrisma.user.findUnique.mockResolvedValue({ id: '123', email: 'test@example.com', ... });
+const result = await authService.validateUser({ email: 'test@example.com', password: 'wrong' });
+```
+
+---
+
+## Section 8: Performance Awareness
+
+### 8.1 N+1 Query Problem — Know This
+
+The most common database performance bug:
+
+```typescript
+// ❌ N+1 — one query for products, then one query PER product for batches
+const products = await prisma.product.findMany();
+for (const product of products) {
+  const batches = await prisma.batch.findMany({ where: { productId: product.id } });
+  // This runs N extra queries where N = number of products
+}
+
+// ✅ Eager loading — one query with JOIN
+const products = await prisma.product.findMany({
+  include: { batches: true }  // Prisma generates a single JOIN query
+});
+```
+
+Always use `include` or `select` in Prisma to fetch related data in one query.
+
+### 8.2 Database Indexes
+
+Your Prisma schema has `@unique` (which creates an index) on `email`, `phoneNumber`, `stripeSubscriptionId`. But for query performance, you need indexes on columns you filter by:
+
+```prisma
+model Product {
+  // ... fields
+  @@index([roastLevel])   // adds index for filtering by roastLevel
+  @@index([isActive])     // adds index for isActive = true queries
+}
+```
+
+Add these to `schema.prisma` and run `prisma migrate dev`.
+
+---
+
+## Section 9: Security Checklist (OWASP Top 10 Applied to Your Stack)
+
+| Vulnerability | Risk in Your App | Your Defense |
+|---|---|---|
+| **Injection** | SQL injection via Prisma queries | Prisma uses parameterized queries — you're safe as long as you use Prisma |
+| **Broken Auth** | Brute-force login, weak JWT | Rate limiting (Day 2), strong JWT_SECRET (Day 1) |
+| **Sensitive Data Exposure** | Password hash in API response, JWT stored in localStorage | `@Exclude()` on passwordHash, sessionStorage (acceptable) |
+| **IDOR** | User accessing another user's orders by guessing ID | Always filter by `userId = req.user.userId` on user-specific routes |
+| **Security Misconfiguration** | Missing HTTP headers, open CORS | Helmet middleware (Day 6), strict CORS origins |
+| **XSS** | Script injection via product description | React auto-escapes JSX — safe by default unless you use `dangerouslySetInnerHTML` |
+| **Broken Access Control** | Admin routes accessible without role | `JwtAuthGuard + RolesGuard` pattern you've already built |
+
+---
+
+## Section 10: Your Progression Checklist (Junior → Senior)
+
+### Level 1 — Beginner (You Are Here)
+- [ ] Understand NestJS request pipeline order
+- [ ] Know the difference between Guards, Pipes, Interceptors, Filters
+- [ ] Write a Prisma query with `where`, `select`, `include`
+- [ ] Create a validated DTO with class-validator
+- [ ] Call an API from the frontend with React Query
+
+### Level 2 — Intermediate
+- [ ] Design Zod env validation schema for a new service
+- [ ] Write a custom Exception Filter that handles domain errors
+- [ ] Set up `JwtModule.registerAsync()` with ConfigService injection
+- [ ] Write a unit test with mocked PrismaService
+- [ ] Debug a 403 by tracing through the pipeline (middleware → guard → reflector)
+
+### Level 3 — Advanced
+- [ ] Implement `@nestjs/throttler` with a custom tracking key (email, not IP)
+- [ ] Write an Interceptor that logs request duration for every admin mutation
+- [ ] Use Prisma `$transaction()` for atomic inventory reserve + order create
+- [ ] Set up GitHub Actions CI that blocks merges when tests fail
+- [ ] Write an ADR explaining an architectural decision
+
+### Level 4 — Senior
+- [ ] Design a module structure for a new domain (Subscriptions) following established patterns
+- [ ] Profile and fix an N+1 query using Prisma logs
+- [ ] Add a database index after identifying a slow query
+- [ ] Conduct a code review asking PRIMM questions (Predict, Run, Investigate, Modify, Make)
+- [ ] Deploy a production migration with a rollback plan
+
+---
+
+## Section 11: Recommended Reading (With Purpose)
+
+| Resource | Why You Need It | When to Read |
+|---|---|---|
+| [NestJS Official Docs](https://docs.nestjs.com) — Guards, Interceptors, Filters | Deep understanding of pipeline | Before each relevant Day |
+| [Prisma Docs](https://www.prisma.io/docs) — Transactions, select, include | Avoid N+1, atomic operations | Day 3 |
+| [Zod Docs](https://zod.dev) — .refine(), .superRefine(), discriminated unions | Advanced validation patterns | Day 1 |
+| [Stripe Docs](https://stripe.com/docs) — Checkout, Webhooks, Idempotency | Understand the payment flow | Day 5 |
+| [OWASP Cheat Sheet — Authentication](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html) | Know what you're defending against | Day 2 |
+| [Conventional Commits](https://www.conventionalcommits.org) | Professional Git workflow | Today |
+| [12-Factor App](https://12factor.net) | Why config validation matters | Day 1 |
+| [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook) — Mapped Types, Conditional Types | Master the type system | Week 2 |

@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthTokenPayloadDto, UserRole } from '../dto/validate-user.dto';
-
+import { ConfigService } from '@nestjs/config';
 
 type AuthenticatedUser = {
   userId: string;
@@ -13,15 +13,13 @@ type AuthenticatedUser = {
 
 @Injectable()
 export class JwtAuthStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly prisma: PrismaService) {
-    const jwtSecret = process.env.JWT_SECRET ?? process.env.Secret_JWT;
-    if (!jwtSecret) {
-      throw new Error('JWT secret is missing. Set JWT_SECRET (or Secret_JWT).');
-    }
-
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: jwtSecret,
+      secretOrKey: configService.get<string>('JWT_SECRET')!,
     });
   }
 
