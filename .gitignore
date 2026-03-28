@@ -5,3 +5,5 @@ node_modules
 # Local scratch files created during debugging
 .tmp-*
 .tmp-dir/
+.env
+.apps/api/.env
