@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ProductService } from '../product/product.service';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
@@ -48,7 +58,7 @@ export class ProductsController {
   @Patch(':id')
   updateProduct(
     @Param('id') id: string,
-    @Body() updateProduct: CreateProductDto
+    @Body() updateProduct: CreateProductDto,
   ) {
     return this.productsService.updateProduct(id, updateProduct);
   }
@@ -56,5 +66,4 @@ export class ProductsController {
   deleteProduct(@Param('id') id: string) {
     return this.productsService.deleteProduct(id);
   }
-  
 }

@@ -1,20 +1,21 @@
 {
-"compilerOptions": {
-"module": "commonjs",
-"target": "ES2021",
-"moduleResolution": "node",
-"declaration": true,
-"removeComments": true,
-"emitDecoratorMetadata": true,
-"experimentalDecorators": true,
-"allowSyntheticDefaultImports": true,
-"sourceMap": true,
-"outDir": "./dist",
-"rootDir": "./src",
-"baseUrl": "./",
-"incremental": true,
-"skipLibCheck": true,
-"strictNullChecks": true,
-"forceConsistentCasingInFileNames": true
-}
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2021",
+    "moduleResolution": "node",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./", // Changed from "./src" to "./" to include both src and test folders
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "ignoreDeprecations": "6.0"
+  }
 }

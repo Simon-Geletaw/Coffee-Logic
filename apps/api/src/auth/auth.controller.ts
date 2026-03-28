@@ -5,10 +5,10 @@ import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
-    @Post('login')
-    login(@Body() validateUserD: ValidateUserDto) {
-        return this.authService.validateUser(validateUserD);  
-    }
+  @Post('login')
+  login(@Body() validateUserD: ValidateUserDto) {
+    return this.authService.validateUser(validateUserD);
+  }
 }

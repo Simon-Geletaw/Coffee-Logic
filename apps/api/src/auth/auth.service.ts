@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import { AuthTokenPayloadDto, UserRole, ValidateUserDto } from './dto/validate-user.dto';
+import {
+  AuthTokenPayloadDto,
+  UserRole,
+  ValidateUserDto,
+} from './dto/validate-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -30,7 +34,10 @@ export class AuthService {
       return { code: 401, message: 'Invalid email or password' };
     }
 
-    const isPasswordValid = await bcrypt.compare(acceptedUserDto.password, foundUser.passwordHash);
+    const isPasswordValid = await bcrypt.compare(
+      acceptedUserDto.password,
+      foundUser.passwordHash,
+    );
     if (!isPasswordValid) {
       return { code: 401, message: 'Invalid email or password' };
     }

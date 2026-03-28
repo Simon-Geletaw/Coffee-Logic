@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtAuthStrategy } from './strategy/jwt.strategy';
 import { ConfigService } from '@nestjs/config';
 import { ConfigModule } from '@nestjs/config';
+import { PrismaModule } from 'src/prisma/prisma.modue';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -18,6 +18,6 @@ import { ConfigModule } from '@nestjs/config';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, PrismaService, JwtAuthStrategy],
+  providers: [AuthService, PrismaModule, JwtAuthStrategy],
 })
 export class AuthModule {}
