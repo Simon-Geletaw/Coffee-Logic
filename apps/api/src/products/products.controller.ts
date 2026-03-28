@@ -1,16 +1,22 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ProductService } from '../product/product.service';
-type productAtrributes = {
-  roastLevel?: string;
-  grind?: string; 
-  origin?: string;
-  caffeine?: string;
-  name?: string;
-  process?: string;
-  description?: string;
+import { Roles } from 'src/common/decorator/roles.decorator';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { CreateProductDto } from './dto/create-product.dto';
 
-}
-
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin')
 @Controller('admin/products')
 export class ProductsController {
   constructor(private readonly productsService: ProductService) {}
@@ -34,14 +40,25 @@ export class ProductsController {
       process,
     });
   }
-  @Post('add')
-  createProduct(@Body() product: productAtrributes) {
+  @Post()
+  createProductRest(@Body() product: CreateProductDto) {
     return this.productsService.createProduct(product);
-      }
+  }
+
+  @Post('add')
+  createProduct(@Body() product: CreateProductDto) {
+    return this.productsService.createProduct(product);
+  }
+
+  @Post('bulk-add')
+  createProductsBulk(@Body() products: CreateProductDto[]) {
+    return this.productsService.createProducts(products);
+  }
+
   @Patch(':id')
   updateProduct(
     @Param('id') id: string,
-    @Body() updateProduct: productAtrributes
+    @Body() updateProduct: CreateProductDto,
   ) {
     return this.productsService.updateProduct(id, updateProduct);
   }
@@ -49,5 +66,4 @@ export class ProductsController {
   deleteProduct(@Param('id') id: string) {
     return this.productsService.deleteProduct(id);
   }
-  
 }
