@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
@@ -27,11 +27,15 @@ export class AuthService {
         email: true,
         role: true,
         passwordHash: true,
+        isActive: true,
       },
     });
 
     if (!foundUser) {
-      return { code: 401, message: 'Invalid email or password' };
+      throw new UnauthorizedException('Invalid email or password');
+    }
+    if (foundUser.isActive == false) {
+      throw new UnauthorizedException('User account is inactive');
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -39,7 +43,7 @@ export class AuthService {
       foundUser.passwordHash,
     );
     if (!isPasswordValid) {
-      return { code: 401, message: 'Invalid email or password' };
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     const payload: AuthTokenPayloadDto = {
@@ -49,12 +53,11 @@ export class AuthService {
     };
 
     const token = await this.jwtService.signAsync(payload);
-    return { code: 200, message: 'Login successful', token };
-  }
-
-  async hashPassword(password: string): Promise<string> {
-    const salt = await bcrypt.genSalt(10);
-    return await bcrypt.hash(password, salt);
+    return {
+      code: 200,
+      message: 'Login successful',
+      token,
+    };
   }
 
   async comparePassword(password: string, hash: string): Promise<boolean> {

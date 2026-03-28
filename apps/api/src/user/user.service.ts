@@ -1,6 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 // import { Prisma } from '@prisma/client';
 
@@ -12,14 +18,6 @@ type UserReturnData = {
   email: string;
   role: string;
 };
-// type UserCreateData = {
-//   firstName: string;
-//   lastName: string;
-//   email: string;
-//   phoneNumber: string;
-//   passwordHash: string;
-//   role: string;
-// };
 type ServiceResponse = {
   status: number;
   message: string;
@@ -51,15 +49,10 @@ export class UserService {
       },
     });
     if (existingUserEmail || exsistingUserPhone) {
-      return {
-        status: 400,
-        message: 'Email already exists',
-      };
+      throw new ConflictException('Email or phone number already exists');
     }
     try {
-      const hashedPassword: string = await this.hashPassword(
-        userData.passwordHash,
-      );
+      const hashedPassword: string = await this.hashPassword(userData.password);
 
       const user = await this.prisma.user.create({
         data: {
@@ -78,16 +71,13 @@ export class UserService {
           message: 'User created successfully',
         };
       } else {
-        return {
-          status: 500,
-          message: 'Failed to create user',
-        };
+        throw new InternalServerErrorException('Failed to create user');
       }
     } catch (error) {
-      return {
-        status: 400,
-        message: error instanceof Error ? error.message : String(error),
-      };
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('An unexpected error occurred');
     }
   }
 
@@ -99,10 +89,7 @@ export class UserService {
     });
 
     if (deletedUser.count === 0) {
-      return {
-        status: 404,
-        message: 'User not found',
-      };
+      throw new NotFoundException('User not found or already deleted');
     }
 
     return {

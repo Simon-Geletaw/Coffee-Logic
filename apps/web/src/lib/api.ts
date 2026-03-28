@@ -6,9 +6,7 @@ import type { AuthSession, Product, ProductPayload, UserRecord } from '@/lib/typ
 import type { LoginInput } from '@/lib/validators';
 
 type LoginResponse = {
-  code: number;
-  message: string;
-  token?: string;
+  token: string;
 };
 
 export type ProductFilters = Partial<{
@@ -26,7 +24,7 @@ export type CreateUserInput = {
   lastName: string;
   email: string;
   phoneNumber: string;
-  passwordHash: string;
+  password: string;
   role: 'viewer' | 'operator' | 'manager' | 'admin';
   defaultAddress?: string;
 };
@@ -43,8 +41,8 @@ export async function login(payload: LoginInput): Promise<AuthSession> {
     body: payload,
   });
 
-  if (response.code >= 400 || !response.token) {
-    throw new Error(response.message || 'Login failed');
+  if (!response.token) {
+    throw new Error('Login failed');
   }
 
   return createSessionFromToken(response.token);

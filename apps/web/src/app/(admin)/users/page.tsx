@@ -19,7 +19,7 @@ export default function UsersPage() {
       lastName: '',
       email: '',
       phoneNumber: '',
-      passwordHash: '',
+      password: '',
       role: 'viewer',
       defaultAddress: '',
     },
@@ -50,7 +50,7 @@ export default function UsersPage() {
             <input className="field" placeholder="Last name" {...register('lastName')} />
             <input className="field" placeholder="Email" type="email" {...register('email')} />
             <input className="field" placeholder="Phone number" {...register('phoneNumber')} />
-            <input className="field" placeholder="Password" type="password" {...register('passwordHash')} />
+            <input className="field" placeholder="Password" type="password" {...register('password')} />
             <select className="field" {...register('role')}>
               <option value="viewer">viewer</option>
               <option value="operator">operator</option>

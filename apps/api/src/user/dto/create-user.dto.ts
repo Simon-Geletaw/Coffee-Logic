@@ -31,7 +31,7 @@ export class CreateUserDto {
   @MinLength(6, { message: 'Password must be at least 6 characters long' })
   @IsNotEmpty({ message: 'Password is required' })
   @IsString()
-  passwordHash!: string;
+  password!: string;
 
   @IsNotEmpty({ message: 'Role is required' })
   @IsEnum(['viewer', 'operator', 'manager', 'admin'], {

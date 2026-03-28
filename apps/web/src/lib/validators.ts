@@ -20,7 +20,7 @@ export const createUserSchema = z.object({
   lastName: z.string().min(1, 'Last name is required').max(60),
   email: z.email('Enter a valid email'),
   phoneNumber: z.string().min(3, 'Phone number is required').max(30),
-  passwordHash: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
   role: z.enum(['viewer', 'operator', 'manager', 'admin']),
   defaultAddress: z.string().max(200).optional().or(z.literal('')),
 });
