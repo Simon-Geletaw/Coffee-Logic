@@ -5,7 +5,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 
-
 @Module({
   imports: [],
   controllers: [ProductsController],
