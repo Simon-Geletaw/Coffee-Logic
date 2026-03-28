@@ -1,26 +1,139 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f4f1e8;
+  --bg-grid: rgba(80, 58, 30, 0.08);
+  --surface: #fffdf9;
+  --surface-strong: #ffffff;
+  --line: #d5c6ad;
+  --line-strong: #8f6f42;
+  --text: #1f1a14;
+  --muted: #5a4a36;
+  --accent: #7a3e19;
+  --accent-strong: #5f2f12;
+  --danger: #b7372f;
+  --success: #2b7a54;
+  --shadow: 0 14px 32px rgba(43, 27, 8, 0.14);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --font-sans: var(--font-heading);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 85% 10%, rgba(192, 150, 101, 0.2), transparent 32%),
+    linear-gradient(180deg, #f7f4ed 0%, #f2ece0 100%);
+  font-family: var(--font-heading), "Segoe UI", sans-serif;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(to right, transparent 0 23px, var(--bg-grid) 24px),
+    linear-gradient(to bottom, transparent 0 23px, var(--bg-grid) 24px);
+  background-size: 24px 24px;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+main {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 80rem;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  main {
+    padding: 2rem;
+  }
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.btn {
+  border-radius: 0.75rem;
+  border: 1px solid var(--line);
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: transform 120ms ease, filter 120ms ease, background-color 120ms ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: linear-gradient(140deg, var(--accent), #99623b);
+  border-color: rgba(122, 62, 25, 0.45);
+  color: #fff8f2;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+.btn-secondary {
+  background: var(--surface-strong);
+  color: var(--muted);
+}
+
+.btn-danger {
+  background: rgba(183, 55, 47, 0.12);
+  border-color: rgba(183, 55, 47, 0.4);
+  color: #872921;
+}
+
+.field {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: #fff;
+  color: var(--text);
+  padding: 0.6rem 0.7rem;
+}
+
+.field:focus {
+  border-color: var(--line-strong);
+  outline: 2px solid rgba(143, 111, 66, 0.25);
+  outline-offset: 1px;
+}
+
+.fade-up {
+  animation: fade-up 280ms ease both;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
