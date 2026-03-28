@@ -1,0 +1,1 @@
+﻿const { fork } = require('node:child_process'); const cp = fork(require('node:path').resolve(__dirname, '.tmp-fork-child.js'), { stdio: ['inherit','inherit','inherit','ipc'] }); cp.on('message', (m) => console.log('child msg', m)); cp.on('exit', (c,s) => console.log('exit', c, s));
