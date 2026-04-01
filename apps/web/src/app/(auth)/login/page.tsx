@@ -30,12 +30,8 @@ export default function LoginPage() {
     <main className="max-w-3xl">
       <section className="panel fade-up grid gap-6 p-6 md:grid-cols-[1.1fr_1fr] md:p-8">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">Security First</p>
-          <h1 className="mt-3 text-3xl font-bold leading-tight">Coffee Logic Admin Access</h1>
-          <p className="mt-3 text-sm text-[color:var(--muted)]">
-            This workspace manages products and users over protected API endpoints. Sessions expire automatically when the
-            token expires or access is denied.
-          </p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">Secure Access</p>
+          <h1 className="mt-3 text-3xl font-bold leading-tight">Coffee Logic</h1>
         </div>
 
         <form className="grid gap-3" onSubmit={handleSubmit((values) => loginMutation.mutate(values))}>
