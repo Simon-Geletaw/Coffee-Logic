@@ -1,0 +1,7 @@
+﻿src/app/(admin)/page.tsx(8,30): error TS2307: Cannot find module '@/components/skeleton' or its corresponding type declarations.
+src/app/(admin)/users/page.tsx(10,31): error TS2307: Cannot find module '@/components/skeleton' or its corresponding type declarations.
+src/app/(admin)/users/page.tsx(11,26): error TS2307: Cannot find module '@/components/toast' or its corresponding type declarations.
+src/components/product-dashboard.tsx(9,31): error TS2307: Cannot find module '@/components/skeleton' or its corresponding type declarations.
+src/components/product-dashboard.tsx(10,35): error TS2307: Cannot find module '@/components/product-edit-modal' or its corresponding type declarations.
+src/components/product-dashboard.tsx(11,26): error TS2307: Cannot find module '@/components/toast' or its corresponding type declarations.
+src/components/providers.tsx(5,31): error TS2307: Cannot find module '@/components/toast' or its corresponding type declarations.
