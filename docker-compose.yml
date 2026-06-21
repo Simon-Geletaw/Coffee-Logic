@@ -9,7 +9,9 @@ services:
     ports:
       - "7000:5432"
     volumes: 
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql/data
+
   redis:
     image: redis:latest
     restart: unless-stopped

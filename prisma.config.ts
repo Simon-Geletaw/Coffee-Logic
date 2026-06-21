@@ -4,6 +4,7 @@
 // npm install --save-dev prisma dotenv
 import { defineConfig } from "prisma/config";
 import * as process from 'node:process';
+import { validate } from './apps/api/src/config/env.config';
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
