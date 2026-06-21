@@ -7,3 +7,7 @@ node_modules
 .tmp-dir/
 .env
 .apps/api/.env
+memory
+Workspace Storage
+WALKTHROUGH.md
+plan.md
