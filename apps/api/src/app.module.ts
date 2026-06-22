@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/env.config';
 import { PrismaModule } from './prisma/prisma.modue';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core/constants';
 
 @Module({
   imports: [
@@ -27,6 +28,11 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
     ]),
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaModule, ThrottlerGuard],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    PrismaModule,
+    ThrottlerGuard,
+  ],
 })
 export class AppModule {}

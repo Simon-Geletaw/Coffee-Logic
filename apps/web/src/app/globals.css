@@ -264,16 +264,18 @@ main {
   width: 100%;
   padding: 0.6rem 1rem 0.6rem 2.2rem;
   border-radius: 2rem;
-  border: 1.5px solid #bba684; /* Heavier border for search */
+  border: 1.5px solid #e7a843; /* Heavier border for search */
   background: var(--surface-strong);
   font-size: 0.85rem;
+  border-color: #e7a843;
   transition: all 0.2s ease;
+  caret-color: var(--accent);
 }
 
 .field-search input:hover {
   border-color: var(--accent);
-  background: #fdfaf5; /* Subtle color shift on hover */
-  box-shadow: 0 4px 12px rgba(122, 62, 25, 0.08);
+  background: #c78317; /* Subtle color shift on hover */
+  box-shadow: 0 4px 12px rgba(198, 79, 6, 0.08);
 }
 
 .field-search input:focus {

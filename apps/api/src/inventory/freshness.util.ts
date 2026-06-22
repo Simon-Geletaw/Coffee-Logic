@@ -1,12 +1,10 @@
-import da from 'zod/v4/locales/da.js';
-
 type freshnessResult = {
   isPeak: boolean;
   dayPostRoast: number;
   peakStart: Date;
   peakEnd: Date;
 };
-function isPeakFreshness(roastDate: Date): freshnessResult {
+export function isPeakFreshness(roastDate: Date): freshnessResult {
   try {
     const now = new Date().getTime();
     const roastDateTime = roastDate.getTime();

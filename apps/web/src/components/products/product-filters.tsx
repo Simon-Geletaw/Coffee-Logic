@@ -34,8 +34,8 @@ export function ProductFilters({ filters, onFilterChange, onClear }: ProductFilt
           size={14}
           style={{
             position: 'absolute',
-            left: '0.65rem',
-            top: '50%',
+            left: '0.35rem',
+            top: '30%',
             transform: 'translateY(-50%)',
             color: 'var(--muted)',
             pointerEvents: 'none',
@@ -46,7 +46,7 @@ export function ProductFilters({ filters, onFilterChange, onClear }: ProductFilt
           value={filters.name}
           onChange={(e) => onFilterChange('name', e.target.value)}
           className="field-search"
-          placeholder="Search by name…"
+          placeholder="          Search by name…"
           type="search"
           autoComplete="off"
         />

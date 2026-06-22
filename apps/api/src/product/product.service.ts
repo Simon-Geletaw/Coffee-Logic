@@ -54,7 +54,7 @@ export class ProductService {
       },
     });
 
-    return products.map((product) => ({
+    return products.map((product: (typeof products)[number]) => ({
       id: product.id,
       name: product.name,
       roastLevel: product.roastLevel,
