@@ -25,7 +25,7 @@ export function ProductAddForm({ isPending, onCancel, onSubmit }: ProductAddForm
 
   const handleSubmit = () => {
     onSubmit({
-      name: draft.name.trim(),
+      name: draft.name?.trim() ?? '',
       roastLevel: draft.roastLevel?.trim() || '',
       grind: draft.grind?.trim() || '',
       origin: draft.origin?.trim() || '',
@@ -68,7 +68,7 @@ export function ProductAddForm({ isPending, onCancel, onSubmit }: ProductAddForm
           <button
             type="button"
             className="btn btn-primary"
-            disabled={!draft.name.trim() || isPending}
+            disabled={!draft.name?.trim() || isPending}
             onClick={handleSubmit}
           >
             {isPending ? (

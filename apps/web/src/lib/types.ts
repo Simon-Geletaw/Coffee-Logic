@@ -39,6 +39,31 @@ export type BatchPayload = {
   expiresAt?: string;
 };
 
+export type Inventory = {
+  id: string;
+  batchId: string;
+  onHand: number;
+  reserved: number;
+  available: number;
+  status: boolean;
+  updatedAt: string;
+  batch?: {
+    id: string;
+    batchCode: string;
+    product: { id: string; name: string };
+  };
+};
+
+export type InventoryPayload = {
+  batchId: string;
+  onHand: number;
+};
+
+export type InventoryAdjustPayload = {
+  onHand?: number;
+  reserved?: number;
+};
+
 export type UserRecord = {
   id: string;
   email: string;

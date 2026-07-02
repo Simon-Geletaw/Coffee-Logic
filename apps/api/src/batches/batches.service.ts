@@ -25,17 +25,46 @@ export class BatchesService {
     });
   }
 
+  /**
+   * Returns only active (non-deleted) batches.
+   * Soft-deleted batches are hidden from the default listing.
+   */
   async findAll() {
     return this.prisma.batch.findMany({
+      where: { isActive: true },
       include: { product: { select: { id: true, name: true } } },
       orderBy: { roastDate: 'desc' },
     });
   }
 
+  /**
+   * Soft-deletes a batch (sets isActive = false).
+   * If the batch has an inventory record, also soft-deletes it.
+   * Uses $transaction to ensure atomicity — either both update or neither.
+   */
   async remove(id: string) {
-    const batch = await this.prisma.batch.findUnique({ where: { id } });
+    const batch = await this.prisma.batch.findUnique({
+      where: { id },
+      include: { inventory: true },
+    });
     if (!batch) throw new NotFoundException('Batch not found');
-    await this.prisma.batch.delete({ where: { id } });
+
+    await this.prisma.$transaction(async (tx) => {
+      // Soft-delete the batch
+      await tx.batch.update({
+        where: { id },
+        data: { isActive: false },
+      });
+
+      // Cascade: if inventory exists, soft-delete it too
+      if (batch.inventory) {
+        await tx.inventory.update({
+          where: { id: batch.inventory.id },
+          data: { status: false },
+        });
+      }
+    });
+
     return { id, status: 'deleted' as const };
   }
 }
