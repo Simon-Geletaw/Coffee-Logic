@@ -5,6 +5,7 @@ import { ProductsModule } from './products/products.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { BatchesModule } from './batches/batches.module';
+import { InventoryModule } from './inventory/inventory.module';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/env.config';
 import { PrismaModule } from './prisma/prisma.modue';
@@ -17,6 +18,7 @@ import { APP_GUARD } from '@nestjs/core/constants';
     AuthModule,
     UserModule,
     BatchesModule,
+    InventoryModule,
     ConfigModule.forRoot({
       isGlobal: true,
       validate,
