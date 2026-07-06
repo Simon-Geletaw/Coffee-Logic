@@ -15,20 +15,20 @@ export enum UserRole {
 
 export class ValidateUserDto {
   @IsEmail({}, { message: 'Invalid email address' })
-  email: string;
+  email!: string;
 
   @IsNotEmpty({ message: 'Password is required' })
   @IsString()
   @MinLength(6, { message: 'Password must be at least 6 characters long' })
-  password: string;
+  password!: string;
 }
 
 export class AuthTokenPayloadDto {
-  userId: string;
+  userId!: string;
 
   @IsEmail({}, { message: 'Invalid email address' })
-  email: string;
+  email!: string;
 
   @IsEnum(UserRole, { message: 'Invalid user role' })
-  role: UserRole;
+  role!: UserRole;
 }

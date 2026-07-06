@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
+import { ToastProvider } from '@/components/toast';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -9,9 +10,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 20_000,
+            // 5 seconds — fast enough to feel fresh after mutations
+            staleTime: 5_000,
+            // Exponential back-off handled internally by react-query
             retry: 1,
+            // Don't refetch on focus — reduces noise in admin panels
             refetchOnWindowFocus: false,
+            // Keep previous data visible while re-fetching (no flash of empty)
+            placeholderData: (prev: unknown) => prev,
           },
           mutations: {
             retry: 0,
@@ -20,5 +26,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }),
   );
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>{children}</ToastProvider>
+    </QueryClientProvider>
+  );
 }

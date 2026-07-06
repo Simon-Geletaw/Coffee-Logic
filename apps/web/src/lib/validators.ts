@@ -25,6 +25,14 @@ export const createUserSchema = z.object({
   defaultAddress: z.string().max(200).optional().or(z.literal('')),
 });
 
+export const batchSchema = z.object({
+  productId: z.string().uuid('Must be a valid product ID'),
+  batchCode: z.string().min(1, 'Batch code is required').max(60),
+  roastDate: z.string().min(1, 'Roast date is required'),
+  expiresAt: z.string().optional(),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ProductInput = z.infer<typeof productSchema>;
+export type BatchInput = z.infer<typeof batchSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;

@@ -2,7 +2,7 @@
 
 import { requestJson } from '@/lib/http';
 import { createSessionFromToken } from '@/lib/session';
-import type { AuthSession, Product, ProductPayload, UserRecord } from '@/lib/types';
+import type { AuthSession, Batch, BatchPayload, Inventory, InventoryPayload, InventoryAdjustPayload, Product, ProductPayload, UserRecord } from '@/lib/types';
 import type { LoginInput } from '@/lib/validators';
 
 type LoginResponse = {
@@ -96,6 +96,47 @@ export function createUser(payload: CreateUserInput): Promise<UserMutationRespon
 
 export function deleteUser(id: string): Promise<UserMutationResponse> {
   return requestJson<UserMutationResponse>(`/users/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export function getBatches(): Promise<Batch[]> {
+  return requestJson<Batch[]>('/admin/batches');
+}
+
+export function createBatch(payload: BatchPayload): Promise<Batch> {
+  return requestJson<Batch>('/admin/batches', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export function deleteBatch(id: string): Promise<void> {
+  return requestJson<void>(`/admin/batches/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export function getInventory(): Promise<Inventory[]> {
+  return requestJson<Inventory[]>('/admin/inventory');
+}
+
+export function createInventory(payload: InventoryPayload): Promise<Inventory> {
+  return requestJson<Inventory>('/admin/inventory', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export function adjustInventory(id: string, payload: InventoryAdjustPayload): Promise<Inventory> {
+  return requestJson<Inventory>(`/admin/inventory/${id}`, {
+    method: 'PATCH',
+    body: payload,
+  });
+}
+
+export function deleteInventory(id: string): Promise<void> {
+  return requestJson<void>(`/admin/inventory/${id}`, {
     method: 'DELETE',
   });
 }

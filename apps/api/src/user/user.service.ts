@@ -12,7 +12,6 @@ import * as bcrypt from 'bcrypt';
 
 type UserReturnData = {
   id: string;
-
   firstName: string;
   lastName: string;
   email: string;
@@ -37,6 +36,22 @@ export class UserService {
     })) as UserReturnData[];
     return user;
   }
+  async getProfile(id: string): Promise<UserReturnData> {
+    const user = (await this.prisma.user.findUnique({
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+      },
+      where: {
+        id: id,
+      },
+    })) as UserReturnData;
+    return user;
+  }
+
   async createUser(userData: CreateUserDto): Promise<ServiceResponse> {
     const existingUserEmail = await this.prisma.user.findUnique({
       where: {

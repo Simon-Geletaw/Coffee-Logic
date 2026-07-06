@@ -4,7 +4,7 @@ export class CreateProductDto {
   @IsString()
   @IsNotEmpty({ message: 'Product name is required' })
   @MaxLength(120)
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsString()
