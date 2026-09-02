@@ -631,3 +631,8 @@ select.field:hover {
   100% { background-position: -200% 0; }
 }
 
+@theme {
+  --color-forest: #0f2418;
+  --color-cream: #f5efe6;
+}
+
