@@ -1,4 +1,5 @@
 node_modules
+.tools/
 
 /generated/prisma
 
@@ -11,3 +12,4 @@ memory
 Workspace Storage
 WALKTHROUGH.md
 plan.md
+./docs/*
