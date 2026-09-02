@@ -13,3 +13,7 @@ Workspace Storage
 WALKTHROUGH.md
 plan.md
 ./docs/*
+docs/*.md
+docs/**/*.md
+docs/**/*.png
+docs/
