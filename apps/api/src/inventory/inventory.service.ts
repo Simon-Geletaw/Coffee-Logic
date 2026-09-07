@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
@@ -109,7 +110,7 @@ export class InventoryService {
    * could read stale data and produce inconsistent state.
    */
   async adjustStock(id: string, dto: UpdateInventoryDto) {
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Read current state inside the transaction
       const inventory = await tx.inventory.findUnique({ where: { id } });
       if (!inventory) {

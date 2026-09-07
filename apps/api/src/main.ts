@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import type { NextFunction, Request, Response } from 'express';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import helmet from 'helmet';
 
 const LOGIN_RATE_LIMIT = {
   max: 5,
@@ -13,7 +14,11 @@ const LOGIN_RATE_LIMIT = {
 const loginRequests = new Map<string, { count: number; windowStart: number }>();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // rawBody keeps the unparsed request bytes on req.rawBody. Payment webhooks
+  // are signed over those exact bytes, so verification must see them before
+  // any JSON parsing touches the payload.
+  const app = await NestFactory.create(AppModule, { rawBody: true });
+  app.use(helmet());
   app.useGlobalGuards(app.get(ThrottlerGuard));
   app.useGlobalFilters(new AllExceptionsFilter());
   app.use('/auth/login', (req: Request, res: Response, next: NextFunction) => {
@@ -55,12 +60,14 @@ async function bootstrap() {
     );
     return next();
   });
+  const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:3000';
   app.enableCors({
-    origin: [
-      'http://localhost:3001',
-      'http://localhost:5173',
-      'http://localhost:3000',
-    ],
+    // Production allows exactly the storefront origin. Dev keeps the local
+    // ports so Vite/Next previews still work.
+    origin:
+      process.env.NODE_ENV === 'production'
+        ? [webOrigin]
+        : [webOrigin, 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:3000'],
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     credentials: true,
   });

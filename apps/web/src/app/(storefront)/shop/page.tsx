@@ -1,7 +1,20 @@
-import ComingSoon from "../coming-soon";
+import { Suspense } from 'react';
+import ShopClient from './shop-client';
 
-export const metadata = { title: "Shop — Melkora" };
+export const metadata = {
+  title: 'Shop — Melkora',
+  description:
+    'Buy single-origin Ethiopian coffee — Sidamo, Yirgacheffe and Guji — roasted to order in Addis.',
+};
 
 export default function ShopPage() {
-  return <ComingSoon eyebrow="SHOP" title="The shop opens soon." text="Whole-bean Sidamo, Yirgacheffe and Guji will be available to order here. Until then, explore the collection and find us in Addis." />;
+  return (
+    // useSearchParams needs a Suspense boundary to keep the rest of the route
+    // statically renderable.
+    <Suspense
+      fallback={<div className="min-h-screen bg-cream-soft" aria-busy="true" />}
+    >
+      <ShopClient />
+    </Suspense>
+  );
 }

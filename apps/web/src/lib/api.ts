@@ -2,7 +2,30 @@
 
 import { requestJson } from '@/lib/http';
 import { createSessionFromToken } from '@/lib/session';
-import type { AuthSession, Batch, BatchPayload, Inventory, InventoryPayload, InventoryAdjustPayload, Product, ProductPayload, UserRecord } from '@/lib/types';
+import { clearCartToken, getCartToken, saveCartToken } from '@/lib/cart-token';
+import type {
+  AddCartItemPayload,
+  AddCartItemResponse,
+  AdminVariant,
+  AuthSession,
+  Batch,
+  BatchPayload,
+  Cart,
+  CatalogFacets,
+  CatalogProduct,
+  CatalogQuery,
+  CheckoutPayload,
+  Inventory,
+  InventoryPayload,
+  InventoryAdjustPayload,
+  OrderDetail,
+  PlacedOrder,
+  Product,
+  ProductPayload,
+  UserRecord,
+  VariantPayload,
+  VariantUpdatePayload,
+} from '@/lib/types';
 import type { LoginInput } from '@/lib/validators';
 
 type LoginResponse = {
@@ -143,4 +166,130 @@ export function deleteInventory(id: string): Promise<void> {
 
 export function getHealth(): Promise<{ status: string }> {
   return requestJson<{ status: string }>('/health', { auth: 'none' });
+}
+
+/* ─── Storefront catalogue (public — no session required) ────────────── */
+
+function toQueryString(params: Record<string, string | undefined>): string {
+  const search = new URLSearchParams();
+  for (const [key, rawValue] of Object.entries(params)) {
+    const value = rawValue?.trim();
+    if (value) search.set(key, value);
+  }
+  const suffix = search.toString();
+  return suffix ? `?${suffix}` : '';
+}
+
+export function getCatalogProducts(query: CatalogQuery = {}): Promise<CatalogProduct[]> {
+  return requestJson<CatalogProduct[]>(`/catalog/products${toQueryString(query)}`, {
+    auth: 'none',
+  });
+}
+
+export function getCatalogProduct(id: string): Promise<CatalogProduct> {
+  return requestJson<CatalogProduct>(`/catalog/products/${id}`, { auth: 'none' });
+}
+
+export function getCatalogFacets(): Promise<CatalogFacets> {
+  return requestJson<CatalogFacets>('/catalog/products/facets', { auth: 'none' });
+}
+
+/* ─── Cart (public, keyed by the x-cart-token header) ────────────────── */
+
+function cartHeaders(): Record<string, string | undefined> {
+  return { 'x-cart-token': getCartToken() ?? undefined };
+}
+
+export function getCart(): Promise<Cart> {
+  return requestJson<Cart>('/cart', { auth: 'none', headers: cartHeaders() });
+}
+
+export async function addCartItem(payload: AddCartItemPayload): Promise<Cart> {
+  const response = await requestJson<AddCartItemResponse>('/cart/items', {
+    method: 'POST',
+    auth: 'none',
+    headers: cartHeaders(),
+    body: payload,
+  });
+
+  // The first add mints the token; persisting it here keeps every later
+  // request pointed at the same cart row.
+  if (response.cartToken) {
+    saveCartToken(response.cartToken);
+  }
+
+  return response.cart;
+}
+
+export function updateCartItem(itemId: string, quantity: number): Promise<Cart> {
+  return requestJson<Cart>(`/cart/items/${itemId}`, {
+    method: 'PATCH',
+    auth: 'none',
+    headers: cartHeaders(),
+    body: { quantity },
+  });
+}
+
+export function removeCartItem(itemId: string): Promise<Cart> {
+  return requestJson<Cart>(`/cart/items/${itemId}`, {
+    method: 'DELETE',
+    auth: 'none',
+    headers: cartHeaders(),
+  });
+}
+
+export function clearCart(): Promise<Cart> {
+  return requestJson<Cart>('/cart', {
+    method: 'DELETE',
+    auth: 'none',
+    headers: cartHeaders(),
+  });
+}
+
+export async function checkout(payload: CheckoutPayload): Promise<PlacedOrder> {
+  const order = await requestJson<PlacedOrder>('/cart/checkout', {
+    method: 'POST',
+    auth: 'none',
+    headers: cartHeaders(),
+    body: payload,
+  });
+
+  // The server releases the token on checkout, so the browser must drop it too
+  // or the next visit would query a cart that no longer exists.
+  clearCartToken();
+
+  return order;
+}
+
+export function getOrder(id: string): Promise<OrderDetail> {
+  return requestJson<OrderDetail>(`/cart/orders/${id}`, { auth: 'none' });
+}
+
+/* ─── Admin: product variants ────────────────────────────────────────── */
+
+export function getVariants(productId?: string): Promise<AdminVariant[]> {
+  return requestJson<AdminVariant[]>(
+    `/admin/variants${toQueryString({ productId })}`,
+  );
+}
+
+export function createVariant(payload: VariantPayload): Promise<AdminVariant> {
+  return requestJson<AdminVariant>('/admin/variants', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export function updateVariant(
+  id: string,
+  payload: VariantUpdatePayload,
+): Promise<AdminVariant> {
+  return requestJson<AdminVariant>(`/admin/variants/${id}`, {
+    method: 'PATCH',
+    body: payload,
+  });
+}
+
+export function deleteVariant(id: string): Promise<void> {
+  return requestJson<void>(`/admin/variants/${id}`, { method: 'DELETE' });
 }

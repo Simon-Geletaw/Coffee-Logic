@@ -12,6 +12,11 @@ const baseConfig: NextConfig = {
     qualities: [75, 100],
     // Prefer AVIF, fall back to WebP — best fidelity per byte at high quality.
     formats: ['image/avif', 'image/webp'],
+    // Product.imageUrl can point at an external host. Optimised images are
+    // re-served from this origin, so the CSP img-src 'self' rule still covers
+    // them. NOTE: narrow this to your actual image host before production —
+    // a wildcard lets anyone use the optimiser as an open image proxy.
+    remotePatterns: [{ protocol: 'https', hostname: '**' }],
   },
   async headers() {
     return [

@@ -3,7 +3,7 @@
 import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LogOut, LayoutDashboard, Package, Users, Coffee, Layers, Warehouse } from 'lucide-react';
+import { LogOut, LayoutDashboard, Package, Users, Coffee, Layers, Warehouse, Tags } from 'lucide-react';
 import { clearSession, getSession } from '@/lib/session';
 
 type AdminShellProps = {
@@ -16,6 +16,7 @@ type AdminShellProps = {
 const nav = [
   { href: '/admin', label: 'Dashboard', Icon: LayoutDashboard },
   { href: '/admin/products', label: 'Products', Icon: Package },
+  { href: '/admin/variants', label: 'Variants', Icon: Tags },
   { href: '/admin/batches', label: 'Batches', Icon: Layers },
   { href: '/admin/inventory', label: 'Inventory', Icon: Warehouse },
   { href: '/admin/users', label: 'Users', Icon: Users },

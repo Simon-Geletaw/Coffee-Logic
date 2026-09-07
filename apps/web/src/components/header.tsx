@@ -7,6 +7,7 @@ import { navItems } from "@/lib/navigation";
 import { imagePath } from "@/lib/imageSrc";
 import content from "@/lib/content.json";
 import MobileNav from "@/components/mobileNavbar";
+import CartBadge from "@/components/cart/cart-badge";
 
 const iconLinkClass =
   "flex size-9 items-center justify-center rounded-full text-[#2E2A20] transition-colors duration-200 hover:bg-[rgba(176,138,62,0.12)] hover:text-[#8A6420]";
@@ -66,8 +67,13 @@ export default function SiteHeader() {
         </Link>
 
 
-        <Link href="/cart" aria-label="Cart" className={iconLinkClass}>
+        <Link
+          href="/cart"
+          aria-label="Cart"
+          className={`relative ${iconLinkClass}`}
+        >
           <ShoppingBag className="size-[18px]" strokeWidth={1.75} />
+          <CartBadge />
         </Link>
 
         <MobileNav />
