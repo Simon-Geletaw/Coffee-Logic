@@ -82,13 +82,13 @@ model Product {
 }
 
 model ProductVariant {
-  id          String  @id @default(uuid())
+  id          String   @id @default(uuid())
   productId   String
   weightGrams Int
   priceCents  Int
-  currency    String  @default("ETB")
+  currency    Currency @default(ETB)
   sku         String?
-  isActive    Boolean @default(true)
+  isActive    Boolean  @default(true)
 
   product           Product            @relation(fields: [productId], references: [id])
   orderItems        OrderItem[]
@@ -122,29 +122,35 @@ model Inventory {
 }
 
 model Order {
-  id               String      @id @default(uuid())
-  userId           String?
-  cartToken        String?     @unique
-  status           OrderStatus
-  totalCents       Int         @default(0)
-  subtotalCents    Int         @default(0)
-  totalWeightGrams Int         @default(0)
+  id        String      @id @default(uuid())
+  userId    String?
+  cartToken String?     @unique
+  status    OrderStatus
 
-  currency         String      @default("ETB")
+  // Money is decomposed so the summary, the provider charge and the tests
+  // all agree on the same numbers. Minor units (santim / cents).
+  subtotalCents    Int      @default(0)
+  shippingCents    Int      @default(0)
+  totalCents       Int      @default(0)
+  totalWeightGrams Int      @default(0)
+  currency         Currency @default(ETB)
+
+  // Proof of payment. One provider session settles at most one order.
   paymentProvider  String?
-  paymentIntentId  String? // Stripe session id or Chapa tx_ref
-  contactName      String?
-  contactEmail     String?
-  contactPhone     String?
-  shippingAddress  String?
-  shippingcents    Int         @default(0)
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-  paideAt          DateTime?
-  failureReason    DateTime?
+  paymentIntentId  String?   @unique // Stripe session id or Chapa tx_ref
   paymentExpiresAt DateTime?
-  user             User?       @relation(fields: [userId], references: [id])
-  items            OrderItem[]
+  paidAt           DateTime?
+  failureReason    String?
+
+  contactName     String?
+  contactEmail    String?
+  contactPhone    String?
+  shippingAddress String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user  User?       @relation(fields: [userId], references: [id])
+  items OrderItem[]
 }
 
 model OrderItem {
@@ -207,14 +213,15 @@ model AuditEvent {
   actor User @relation("AuditActor", fields: [actorUserId], references: [id])
 }
 
+// Weight-tier shipping. A cart of W grams pays the cheapest active tier
+// whose maxGrams >= W in its currency. Data, not code: the admin edits it.
 model ShippingRate {
   id       String   @id @default(uuid())
   currency Currency
-  maxGrams Int // tota
+  maxGrams Int
   cents    Int
-  label    Int
+  label    String
   isActive Boolean  @default(true)
-  name     String
 
   @@unique([currency, maxGrams])
 }

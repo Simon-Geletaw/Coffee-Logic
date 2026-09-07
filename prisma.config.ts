@@ -14,6 +14,8 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    // Node 24 strips TypeScript natively, so no ts-node/tsx is needed.
+    seed: "node prisma/seed.ts",
   },
   datasource: {
     url: process.env.DATABASE_URL,
