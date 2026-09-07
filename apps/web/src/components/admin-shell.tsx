@@ -14,11 +14,11 @@ type AdminShellProps = {
 };
 
 const nav = [
-  { href: '/', label: 'Dashboard', Icon: LayoutDashboard },
-  { href: '/products', label: 'Products', Icon: Package },
-  { href: '/batches', label: 'Batches', Icon: Layers },
-  { href: '/inventory', label: 'Inventory', Icon: Warehouse },
-  { href: '/users', label: 'Users', Icon: Users },
+  { href: '/admin', label: 'Dashboard', Icon: LayoutDashboard },
+  { href: '/admin/products', label: 'Products', Icon: Package },
+  { href: '/admin/batches', label: 'Batches', Icon: Layers },
+  { href: '/admin/inventory', label: 'Inventory', Icon: Warehouse },
+  { href: '/admin/users', label: 'Users', Icon: Users },
 ];
 
 const ROLE_BADGE_COLORS: Record<string, string> = {

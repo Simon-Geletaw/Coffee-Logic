@@ -22,7 +22,7 @@ export default function LoginPage() {
     mutationFn: login,
     onSuccess: (session) => {
       saveSession(session);
-      router.replace('/products');
+      router.replace('/admin');
     },
   });
 

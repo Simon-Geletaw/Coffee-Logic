@@ -21,4 +21,6 @@ plan.md
 *.pdf
 .vscode/
 opencode.json
-
+.claude/
+.tools/
+.github/

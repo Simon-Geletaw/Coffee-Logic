@@ -1,0 +1,105 @@
+{
+  "brand": {
+    "name": "Melkora",
+    "tagline": "Coffee Roasters"
+  },
+  "hero": {
+    "badge": "Single Origin Ethiopian Coffee",
+    "headline": "Crafted by Nature, Roasted for You.",
+    "description": "From the rich soils of Ethiopia to your cup, we source exceptional coffee with character, depth, and a perfectly balanced finish.",
+    "ctas": [
+      {
+        "label": "Explore Our Coffees",
+        "href": "/shop",
+        "variant": "primary"
+      }
+    ]
+  },
+  "featured": {
+    "title": "Featured Coffees",
+    "products": [
+      { "name": "Sidamo", "subtitle": "Single Origin", "imageOrder": 4 },
+      { "name": "Yirgacheffe", "subtitle": "Single Origin", "imageOrder": 5 },
+      { "name": "Guji", "subtitle": "Single Origin", "imageOrder": 6 }
+    ]
+  },
+  "origin": {
+    "eyebrow": "Origin & Craft",
+    "title": "Ethiopia",
+    "text": "Ethiopia is coffee’s birthplace — a place where sharing a cup is part of everyday life. Our collection takes its inspiration from Sidamo, Yirgacheffe and Guji. Explore the origins, discover the differences, and find a coffee that becomes part of your own ritual.",
+    "cta": { "label": "Experience it together", "href": "/#cafes" }
+  },
+  "cafes": {
+    "eyebrow": "Cafés",
+    "title": "Crafted Together",
+    "intro": "Step into a Melkora café and slow down. Each location is built around the same ritual — the pour, the conversation, the cup you didn't know you needed.",
+    "cta": { "label": "Find a Café", "href": "/#cafe-finder" },
+    "locations": [
+      {
+        "id": "bole",
+        "name": "Melkora Bole",
+        "neighborhood": "Bole, Addis Ababa",
+        "address": "Bole Road, near Edna Mall, Addis Ababa, Ethiopia",
+        "phone": "+251 11 234 5678",
+        "hours": [
+          { "days": "Mon – Fri", "time": "7:00 AM – 9:00 PM" },
+          { "days": "Sat – Sun", "time": "8:00 AM – 10:00 PM" }
+        ],
+        "mapQuery": "Bole Road, Addis Ababa, Ethiopia",
+        "notes": "Flagship café with full pour-over bar and retail shelf."
+      },
+      {
+        "id": "sarbet",
+        "name": "Melkora Sarbet",
+        "neighborhood": "Sarbet, Addis Ababa",
+        "address": "Sarbet roundabout, off Gabon Street, Addis Ababa, Ethiopia",
+        "phone": "+251 11 234 5679",
+        "hours": [
+          { "days": "Mon – Fri", "time": "7:30 AM – 8:30 PM" },
+          { "days": "Sat – Sun", "time": "8:30 AM – 9:30 PM" }
+        ],
+        "mapQuery": "Sarbet, Addis Ababa, Ethiopia",
+        "notes": "Quiet neighborhood spot. Pair with our single-origin tasting flight."
+      },
+      {
+        "id": "piassa",
+        "name": "Melkora Piassa",
+        "neighborhood": "Piassa, Addis Ababa",
+        "address": "Churchill Avenue, Piassa, Addis Ababa, Ethiopia",
+        "phone": "+251 11 234 5680",
+        "hours": [
+          { "days": "Mon – Sat", "time": "8:00 AM – 9:00 PM" },
+          { "days": "Sunday", "time": "9:00 AM – 7:00 PM" }
+        ],
+        "mapQuery": "Piassa, Addis Ababa, Ethiopia",
+        "notes": "Our roastery café — watch the beans, drink the cup."
+      }
+    ]
+  },
+  "visit": {
+    "hours": "Mon – Sat · 7:00 AM – 9:00 PM",
+    "address": "Bole Road, Addis Ababa, Ethiopia",
+    "phone": "+251 11 234 5678",
+    "email": "hello@melkora.coffee"
+  },
+  "newsletter": {
+    "eyebrow": "Stay in the cup",
+    "title": "Letters from the roastery",
+    "description": "New single-origins, harvest dispatches, and early access to limited lots — once a month, never more.",
+    "placeholder": "your@email.com",
+    "cta": "Subscribe",
+    "success": "Thanks — you're on the list."
+  },
+  "social": {
+    "instagram": "https://instagram.com/melkora",
+    "facebook": "https://facebook.com/melkora",
+    "tiktok": "https://tiktok.com/@melkora"
+  },
+  "legal": {
+    "privacy": { "label": "Privacy", "href": "/privacy" },
+    "terms": { "label": "Terms", "href": "/terms" }
+  },
+  "footer": {
+    "copyright": "© 2026 Melkora Coffee Roasters · Crafted in Addis Ababa"
+  }
+}
