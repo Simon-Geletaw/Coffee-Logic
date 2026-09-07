@@ -1,12 +1,13 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import {
   addCartItem,
-  checkout,
   clearCart,
+  createCheckoutSession,
   getCart,
+  getCheckoutStatus,
   removeCartItem,
   updateCartItem,
 } from '@/lib/api';
@@ -15,15 +16,22 @@ import type { AddCartItemPayload, Cart, CheckoutPayload } from '@/lib/types';
 
 export const cartKeys = {
   all: ['cart'] as const,
+  status: (orderId: string) => ['checkout-status', orderId] as const,
 };
 
-const EMPTY_CART: Cart = {
+export const EMPTY_CART: Cart = {
   id: null,
   status: 'cart',
   currency: null,
+  subtotalCents: 0,
+  shippingCents: 0,
   totalCents: 0,
+  totalWeightGrams: 0,
   itemCount: 0,
   items: [],
+  paymentProvider: null,
+  paymentExpiresAt: null,
+  failureReason: null,
   updatedAt: null,
 };
 
@@ -64,9 +72,14 @@ export function useCart() {
     }
   }, [hasToken, queryClient]);
 
+  const cart = hasToken ? (query.data ?? EMPTY_CART) : EMPTY_CART;
+
   return {
     ...query,
-    cart: hasToken ? (query.data ?? EMPTY_CART) : EMPTY_CART,
+    cart,
+    /** Lines can be changed only while no payment session holds them. */
+    isEditable: cart.status === 'cart' || cart.status === 'failed',
+    isPaymentPending: cart.status === 'pending',
   };
 }
 
@@ -76,9 +89,7 @@ export function useCartCount(): number {
   return cart.itemCount;
 }
 
-function useCartMutation<TArgs>(
-  mutationFn: (args: TArgs) => Promise<Cart>,
-) {
+function useCartMutation<TArgs>(mutationFn: (args: TArgs) => Promise<Cart>) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn,
@@ -106,13 +117,55 @@ export function useClearCart() {
   return useCartMutation(() => clearCart());
 }
 
-export function useCheckout() {
+/**
+ * Opens a provider session. The idempotency key is generated once per
+ * checkout *attempt* by the caller, so a retry of the same click replays
+ * rather than double-charges.
+ */
+export function useCreateCheckoutSession() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: CheckoutPayload) => checkout(payload),
-    onSuccess: () => {
-      // The cart became an order and its token is gone.
-      queryClient.setQueryData(cartKeys.all, EMPTY_CART);
-    },
+    mutationFn: ({
+      payload,
+      idempotencyKey,
+    }: {
+      payload: CheckoutPayload;
+      idempotencyKey: string;
+    }) => createCheckoutSession(payload, idempotencyKey),
+    // The cart is now `pending`; make sure nothing renders it as editable.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: cartKeys.all }),
   });
+}
+
+/**
+ * Polls /checkout/status until the order leaves `pending`. Stops on its own
+ * after `maxPolls` so a lost webhook cannot spin the page forever.
+ */
+export function useCheckoutStatus(
+  orderId: string | null,
+  options?: { intervalMs?: number; maxPolls?: number },
+) {
+  const intervalMs = options?.intervalMs ?? 2_000;
+  const maxPolls = options?.maxPolls ?? 45; // ≈ 90 s
+  // Flipped from inside the interval callback (not render) when we give up.
+  const [exhausted, setExhausted] = useState(false);
+
+  const query = useQuery({
+    queryKey: cartKeys.status(orderId ?? ''),
+    queryFn: () => getCheckoutStatus(orderId as string),
+    enabled: Boolean(orderId),
+    refetchInterval: (current) => {
+      const status = current.state.data?.status;
+      if (status && status !== 'pending') return false;
+      if (current.state.dataUpdateCount >= maxPolls) {
+        setExhausted(true);
+        return false;
+      }
+      return intervalMs;
+    },
+    refetchOnWindowFocus: true,
+    retry: 2,
+  });
+
+  return { ...query, exhausted };
 }

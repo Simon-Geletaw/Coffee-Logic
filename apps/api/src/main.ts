@@ -67,7 +67,12 @@ async function bootstrap() {
     origin:
       process.env.NODE_ENV === 'production'
         ? [webOrigin]
-        : [webOrigin, 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:3000'],
+        : [
+            webOrigin,
+            'http://localhost:3001',
+            'http://localhost:5173',
+            'http://localhost:3000',
+          ],
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     credentials: true,
   });

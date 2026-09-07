@@ -54,7 +54,7 @@ function CoffeeScene({ onReady, onFailure }: Omit<SceneProps, "running">) {
   const elapsed = useRef(0);
   const firstFrame = useRef(false);
   const input = useRef({ x: 0, y: 0, scroll: 0 });
-  const geometry = useMemo(createBean, []);
+  const geometry = useMemo(() => createBean(), []);
   const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.48, metalness: 0 }), []);
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const steam = useMemo(() => ({ time: { value: 0 } }), []);
@@ -108,6 +108,8 @@ function CoffeeScene({ onReady, onFailure }: Omit<SceneProps, "running">) {
       });
       cloud.current.instanceMatrix.needsUpdate = true;
     }
+    // three.js uniforms are mutated per frame by design (R3F useFrame pattern).
+    // eslint-disable-next-line react-hooks/immutability
     steam.time.value = t;
   });
 

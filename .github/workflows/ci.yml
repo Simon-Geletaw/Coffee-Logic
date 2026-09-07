@@ -1,22 +1,140 @@
 name: ci
+
 on:
   push:
-    branches: [main, develop, master]
+    branches: [master, develop]
   pull_request:
-    branches: [main, develop, master]
-  merge_group:
-    branches: [main, develop, master]
+    branches: [master, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Never real. Only what env validation needs to let modules load in tests.
+  DATABASE_URL: postgresql://coffee:coffee@localhost:5432/coffee_logic_test
+  JWT_SECRET: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+  NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
 
 jobs:
-  build:
+  # ── Static checks + unit tests, no services needed ─────────────────────
+  api:
+    name: api · lint · typecheck · unit tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.1
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run build
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Both: pnpm isolates each package's @prisma/client, so generate where it is used.
+      - run: pnpm prisma generate && pnpm -C apps/api exec prisma generate
+      - name: Lint
+        run: pnpm -C apps/api exec eslint "src/**/*.ts"
+      - name: Typecheck
+        run: pnpm -C apps/api exec tsc --noEmit -p tsconfig.json --rootDir src
+      - name: Unit tests
+        run: pnpm -C apps/api exec jest --ci --coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-coverage
+          path: apps/api/coverage
+          retention-days: 7
+
+  # ── Integration tests against real Postgres + Redis ────────────────────
+  api-integration:
+    name: api · integration (postgres + redis)
+    runs-on: ubuntu-latest
+    needs: api
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: coffee_logic_test
+          POSTGRES_USER: coffee
+          POSTGRES_PASSWORD: coffee
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U coffee"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      REDIS_URL: redis://localhost:6379
+      PAYMENTS_FAKE: 'true'
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -C apps/api exec prisma generate
+      # Production-style: apply committed migrations, never `migrate dev`.
+      - run: pnpm prisma migrate deploy
+      - run: pnpm prisma db seed
+      - name: Integration tests
+        run: pnpm -C apps/api exec jest --ci --config ./test/jest-e2e.json
+
+  # ── Web ────────────────────────────────────────────────────────────────
+  web:
+    name: web · lint · typecheck · unit tests · build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm -C apps/web exec eslint src
+      - name: Typecheck
+        run: pnpm -C apps/web exec tsc --noEmit
+      - name: Unit tests
+        run: pnpm -C apps/web test:unit
+      - name: Build
+        run: pnpm -C apps/web build
+        env:
+          COFFEE_LOGIC_NEXT_DIST_DIR: .next-ci
+
+  # ── Supply chain / secrets ─────────────────────────────────────────────
+  security:
+    name: security · audit · secret scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level high
+      - name: Scan for committed secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

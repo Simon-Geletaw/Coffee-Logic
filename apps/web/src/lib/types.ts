@@ -137,13 +137,22 @@ export type CartItem = {
   };
 };
 
+/** cart: editable · pending: payment session open · failed: retry allowed. */
+export type CartStatus = 'cart' | 'pending' | 'failed' | 'paid' | 'refunded';
+
 export type Cart = {
   id: string | null;
-  status: string;
+  status: CartStatus;
   currency: string | null;
+  subtotalCents: number;
+  shippingCents: number;
   totalCents: number;
+  totalWeightGrams: number;
   itemCount: number;
   items: CartItem[];
+  paymentProvider: string | null;
+  paymentExpiresAt: string | null;
+  failureReason: string | null;
   updatedAt: string | null;
 };
 
@@ -167,20 +176,30 @@ export type CheckoutPayload = {
   paymentProvider: PaymentProvider;
 };
 
-export type PlacedOrder = {
+/** Response of POST /checkout/session — send the shopper to redirectUrl. */
+export type CheckoutSession = {
   orderId: string;
-  status: string;
+  provider: PaymentProvider;
+  redirectUrl: string;
+  expiresAt: string;
+};
+
+/** Polled by the return page until status leaves `pending`. */
+export type CheckoutStatus = {
+  orderId: string;
+  status: CartStatus;
+  paymentProvider: string | null;
   totalCents: number;
   currency: string;
-  paymentProvider: string | null;
-  itemCount: number;
+  paymentExpiresAt: string | null;
+  failureReason: string | null;
 };
 
 export type OrderDetail = Cart & {
   contactName: string | null;
   contactEmail: string | null;
   shippingAddress: string | null;
-  paymentProvider: string | null;
+  paidAt: string | null;
   createdAt: string;
 };
 

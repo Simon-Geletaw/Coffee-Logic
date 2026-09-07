@@ -2,7 +2,7 @@
 
 import { requestJson } from '@/lib/http';
 import { createSessionFromToken } from '@/lib/session';
-import { clearCartToken, getCartToken, saveCartToken } from '@/lib/cart-token';
+import { getCartToken, saveCartToken } from '@/lib/cart-token';
 import type {
   AddCartItemPayload,
   AddCartItemResponse,
@@ -15,11 +15,12 @@ import type {
   CatalogProduct,
   CatalogQuery,
   CheckoutPayload,
+  CheckoutSession,
+  CheckoutStatus,
   Inventory,
   InventoryPayload,
   InventoryAdjustPayload,
   OrderDetail,
-  PlacedOrder,
   Product,
   ProductPayload,
   UserRecord,
@@ -246,19 +247,24 @@ export function clearCart(): Promise<Cart> {
   });
 }
 
-export async function checkout(payload: CheckoutPayload): Promise<PlacedOrder> {
-  const order = await requestJson<PlacedOrder>('/cart/checkout', {
+/**
+ * Opens a payment session. The Idempotency-Key makes a network retry return
+ * the same session instead of charging (and reserving stock) twice.
+ */
+export function createCheckoutSession(
+  payload: CheckoutPayload,
+  idempotencyKey: string,
+): Promise<CheckoutSession> {
+  return requestJson<CheckoutSession>('/checkout/session', {
     method: 'POST',
     auth: 'none',
-    headers: cartHeaders(),
+    headers: { ...cartHeaders(), 'Idempotency-Key': idempotencyKey },
     body: payload,
   });
+}
 
-  // The server releases the token on checkout, so the browser must drop it too
-  // or the next visit would query a cart that no longer exists.
-  clearCartToken();
-
-  return order;
+export function getCheckoutStatus(orderId: string): Promise<CheckoutStatus> {
+  return requestJson<CheckoutStatus>(`/checkout/status/${orderId}`, { auth: 'none' });
 }
 
 export function getOrder(id: string): Promise<OrderDetail> {

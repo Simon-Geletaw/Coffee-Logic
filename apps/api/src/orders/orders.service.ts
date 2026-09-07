@@ -1,18 +1,23 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
+import { Prisma, type OrderStatus } from '@prisma/client';
 import { randomBytes } from 'node:crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import {
-  AddCartItemDto,
-  CheckoutDto,
-  UpdateCartItemDto,
-} from './dto/create-order.dto';
+import { ShippingService } from 'src/shipping/shipping.service';
+import { AddCartItemDto, UpdateCartItemDto } from './dto/create-order.dto';
 
-const cartInclude = {
+/**
+ * Everything a cart query needs in one shape. `satisfies` keeps it a literal
+ * (so Prisma can infer the exact payload type) while still type-checking it.
+ */
+export const cartInclude = {
   items: {
+    orderBy: { id: 'asc' },
     include: {
       productVariant: {
         select: {
@@ -30,72 +35,58 @@ const cartInclude = {
               roastLevel: true,
               grind: true,
               imageUrl: true,
+              isActive: true,
             },
           },
         },
       },
     },
   },
-} as const;
+} satisfies Prisma.OrderInclude;
 
-type CartItemRecord = {
-  id: string;
-  quantity: number;
-  unitPriceCents: number;
-  lineTotalCents: number;
-  productVariantId: string;
-  productVariant: {
-    id: string;
-    weightGrams: number;
-    priceCents: number;
-    currency: string;
-    sku: string | null;
-    isActive: boolean;
-    product: {
-      id: string;
-      name: string;
-      origin: string;
-      roastLevel: string;
-      grind: string;
-      imageUrl: string | null;
-    };
-  };
-};
+export type CartRecord = Prisma.OrderGetPayload<{
+  include: typeof cartInclude;
+}>;
 
-type CartRecord = {
-  id: string;
-  cartToken: string | null;
-  status: string;
-  currency: string;
-  totalCents: number;
-  contactName: string | null;
-  contactEmail: string | null;
-  contactPhone: string | null;
-  shippingAddress: string | null;
-  paymentProvider: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  items: CartItemRecord[];
-};
+/**
+ * A shopper's token resolves to their order while it is in any of these
+ * states. `paid` is deliberately absent: paying ends the cart's life and the
+ * next visit starts a fresh one.
+ */
+export const VISIBLE_CART_STATUSES: OrderStatus[] = [
+  'cart',
+  'pending',
+  'failed',
+];
+
+/** Lines can only change while nothing is holding stock for them. */
+const EDITABLE_CART_STATUSES: OrderStatus[] = ['cart', 'failed'];
+
+export const MAX_LINE_QUANTITY = 20;
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly shipping: ShippingService,
+  ) {}
+
+  /* ─── Lookup ─────────────────────────────────────────────────────── */
 
   private newCartToken(): string {
+    // 32 random bytes → 64 hex chars. Unguessable; this is the only credential.
     return randomBytes(32).toString('hex');
   }
 
-  private async findCart(cartToken: string | undefined) {
+  async findCart(cartToken: string | undefined): Promise<CartRecord | null> {
     if (!cartToken) return null;
-    const cart = await this.prisma.order.findFirst({
-      where: { cartToken, status: 'cart' },
+    return this.prisma.order.findFirst({
+      where: { cartToken, status: { in: VISIBLE_CART_STATUSES } },
       include: cartInclude,
     });
-    return cart as CartRecord | null;
   }
 
-  private async requireCart(cartToken: string | undefined) {
+  async requireCart(cartToken: string | undefined): Promise<CartRecord> {
     const cart = await this.findCart(cartToken);
     if (!cart) {
       throw new NotFoundException('Cart not found');
@@ -104,70 +95,42 @@ export class OrdersService {
   }
 
   /**
-   * Units of a product available to sell right now: the sum of available
-   * inventory across its live batches.
-   *
-   * NOTE: Inventory is tracked per batch (so, per product) rather than per
-   * variant, which means a 250g and a 1kg bag both draw from the same pool of
-   * units. Until inventory is modelled in grams this validates unit counts,
-   * not weight.
+   * Mutations are refused while a payment session is open: the reservation
+   * and the provider session both describe *these* lines at *this* price.
+   * A `failed` cart is editable again — editing it clears the failure.
    */
-  private async availableUnits(productId: string): Promise<number> {
-    const rows = await this.prisma.inventory.findMany({
-      where: {
-        status: true,
-        batch: { productId, isActive: true },
-      },
-      select: { available: true },
+  private assertEditable(cart: CartRecord): void {
+    if (!EDITABLE_CART_STATUSES.includes(cart.status)) {
+      throw new ConflictException(
+        'A payment is in progress for this cart. Finish or cancel it before making changes.',
+      );
+    }
+  }
+
+  private async clearFailure(cart: CartRecord): Promise<void> {
+    if (cart.status !== 'failed') return;
+    await this.prisma.order.update({
+      where: { id: cart.id },
+      data: { status: 'cart', failureReason: null, paymentIntentId: null },
     });
-    return rows.reduce(
-      (sum: number, row: { available: number }) => sum + row.available,
-      0,
-    );
   }
 
-  private serialize(cart: CartRecord) {
-    const items = cart.items.map((item) => ({
-      id: item.id,
-      productVariantId: item.productVariantId,
-      quantity: item.quantity,
-      unitPriceCents: item.unitPriceCents,
-      lineTotalCents: item.lineTotalCents,
-      weightGrams: item.productVariant.weightGrams,
-      sku: item.productVariant.sku,
-      product: item.productVariant.product,
-    }));
-
-    return {
-      id: cart.id,
-      status: cart.status,
-      currency: cart.currency,
-      totalCents: cart.totalCents,
-      itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
-      items,
-      updatedAt: cart.updatedAt,
-    };
-  }
+  /* ─── Stock (validation only — reservation happens at checkout) ──── */
 
   /**
-   * Recompute the order total from its lines. Run after every mutation so
-   * totalCents is never taken from the client.
+   * Units of a product available to sell right now, across its live batches.
+   *
+   * NOTE: Inventory is tracked per batch (so, per product) rather than per
+   * variant, which means a 250 g and a 1 kg bag both draw from the same pool
+   * of units. Until inventory is modelled in grams this validates unit
+   * counts, not weight.
    */
-  private async recalculate(orderId: string) {
-    const items = await this.prisma.orderItem.findMany({
-      where: { orderId },
-      select: { lineTotalCents: true },
+  async availableUnits(productId: string): Promise<number> {
+    const rows = await this.prisma.inventory.findMany({
+      where: { status: true, batch: { productId, isActive: true } },
+      select: { available: true },
     });
-    const totalCents = items.reduce(
-      (sum: number, item: { lineTotalCents: number }) =>
-        sum + item.lineTotalCents,
-      0,
-    );
-
-    await this.prisma.order.update({
-      where: { id: orderId },
-      data: { totalCents },
-    });
+    return rows.reduce((sum, row) => sum + row.available, 0);
   }
 
   /**
@@ -179,7 +142,7 @@ export class OrdersService {
     productId: string,
     variantId: string,
     nextQuantity: number,
-  ) {
+  ): Promise<void> {
     const available = await this.availableUnits(productId);
 
     const siblingLines = await this.prisma.orderItem.findMany({
@@ -191,7 +154,7 @@ export class OrdersService {
       select: { quantity: true },
     });
     const alreadyClaimed = siblingLines.reduce(
-      (sum: number, line: { quantity: number }) => sum + line.quantity,
+      (sum, line) => sum + line.quantity,
       0,
     );
 
@@ -200,25 +163,125 @@ export class OrdersService {
       throw new BadRequestException(
         remaining === 0
           ? 'This coffee is out of stock.'
-          : 'Only ' + remaining + ' left in stock.',
+          : `Only ${remaining} left in stock.`,
       );
     }
   }
 
+  /* ─── Totals ─────────────────────────────────────────────────────── */
+
+  /**
+   * Recompute every derived number from the lines. Runs after each mutation
+   * so nothing on the order is ever taken from the client.
+   *
+   * Shipping that cannot be priced (no tier for this weight) is stored as 0
+   * here so the cart stays usable; checkout re-quotes strictly and refuses.
+   */
+  async recalculate(orderId: string): Promise<void> {
+    const order = await this.prisma.order.findUniqueOrThrow({
+      where: { id: orderId },
+      select: {
+        currency: true,
+        items: {
+          select: {
+            quantity: true,
+            lineTotalCents: true,
+            productVariant: { select: { weightGrams: true } },
+          },
+        },
+      },
+    });
+
+    const subtotalCents = order.items.reduce(
+      (sum, item) => sum + item.lineTotalCents,
+      0,
+    );
+    const totalWeightGrams = order.items.reduce(
+      (sum, item) => sum + item.quantity * item.productVariant.weightGrams,
+      0,
+    );
+
+    let shippingCents = 0;
+    try {
+      shippingCents = (
+        await this.shipping.quote(order.currency, totalWeightGrams)
+      ).cents;
+    } catch (error) {
+      if (!(error instanceof UnprocessableEntityException)) throw error;
+    }
+
+    await this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        subtotalCents,
+        shippingCents,
+        totalWeightGrams,
+        totalCents: subtotalCents + shippingCents,
+      },
+    });
+  }
+
+  /* ─── Serialisation ──────────────────────────────────────────────── */
+
+  serialize(cart: CartRecord) {
+    const items = cart.items.map((item) => ({
+      id: item.id,
+      productVariantId: item.productVariantId,
+      quantity: item.quantity,
+      unitPriceCents: item.unitPriceCents,
+      lineTotalCents: item.lineTotalCents,
+      weightGrams: item.productVariant.weightGrams,
+      sku: item.productVariant.sku,
+      product: {
+        id: item.productVariant.product.id,
+        name: item.productVariant.product.name,
+        origin: item.productVariant.product.origin,
+        roastLevel: item.productVariant.product.roastLevel,
+        grind: item.productVariant.product.grind,
+        imageUrl: item.productVariant.product.imageUrl,
+      },
+    }));
+
+    return {
+      id: cart.id,
+      status: cart.status,
+      currency: cart.currency,
+      subtotalCents: cart.subtotalCents,
+      shippingCents: cart.shippingCents,
+      totalCents: cart.totalCents,
+      totalWeightGrams: cart.totalWeightGrams,
+      itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
+      items,
+      paymentProvider: cart.paymentProvider,
+      paymentExpiresAt: cart.paymentExpiresAt,
+      failureReason: cart.failureReason,
+      updatedAt: cart.updatedAt,
+    };
+  }
+
+  static emptyCart() {
+    return {
+      id: null,
+      status: 'cart' as OrderStatus,
+      currency: null,
+      subtotalCents: 0,
+      shippingCents: 0,
+      totalCents: 0,
+      totalWeightGrams: 0,
+      itemCount: 0,
+      items: [] as ReturnType<OrdersService['serialize']>['items'],
+      paymentProvider: null,
+      paymentExpiresAt: null,
+      failureReason: null,
+      updatedAt: null,
+    };
+  }
+
+  /* ─── Public API ─────────────────────────────────────────────────── */
+
   async getCart(cartToken: string | undefined) {
     const cart = await this.findCart(cartToken);
-    if (!cart) {
-      return {
-        id: null,
-        status: 'cart',
-        currency: null,
-        totalCents: 0,
-        itemCount: 0,
-        items: [],
-        updatedAt: null,
-      };
-    }
-    return this.serialize(cart);
+    return cart ? this.serialize(cart) : OrdersService.emptyCart();
   }
 
   async addItem(cartToken: string | undefined, dto: AddCartItemDto) {
@@ -242,27 +305,19 @@ export class OrdersService {
 
     if (!cart) {
       token = this.newCartToken();
-      const created = await this.prisma.order.create({
-        data: {
-          cartToken: token,
-          status: 'cart',
-          totalCents: 0,
-          currency: variant.currency,
-        },
+      cart = await this.prisma.order.create({
+        data: { cartToken: token, status: 'cart', currency: variant.currency },
         include: cartInclude,
       });
-      cart = created as CartRecord;
     }
+
+    this.assertEditable(cart);
 
     // One order carries one currency: Order.currency is a single column, so
     // mixing denominations would make totalCents meaningless.
     if (cart.items.length > 0 && cart.currency !== variant.currency) {
       throw new BadRequestException(
-        'Your cart is in ' +
-          cart.currency +
-          '. Remove those items before adding a ' +
-          variant.currency +
-          ' product.',
+        `Your cart is in ${cart.currency}. Remove those items before adding a ${variant.currency} product.`,
       );
     }
 
@@ -271,8 +326,10 @@ export class OrdersService {
     );
     const nextQuantity = (existingLine?.quantity ?? 0) + dto.quantity;
 
-    if (nextQuantity > 20) {
-      throw new BadRequestException('quantity must not exceed 20 per item');
+    if (nextQuantity > MAX_LINE_QUANTITY) {
+      throw new BadRequestException(
+        `quantity must not exceed ${MAX_LINE_QUANTITY} per item`,
+      );
     }
 
     await this.assertStock(
@@ -281,25 +338,22 @@ export class OrdersService {
       variant.id,
       nextQuantity,
     );
+    await this.clearFailure(cart);
+
+    const lineData = {
+      quantity: nextQuantity,
+      unitPriceCents: variant.priceCents,
+      lineTotalCents: variant.priceCents * nextQuantity,
+    };
 
     if (existingLine) {
       await this.prisma.orderItem.update({
         where: { id: existingLine.id },
-        data: {
-          quantity: nextQuantity,
-          unitPriceCents: variant.priceCents,
-          lineTotalCents: variant.priceCents * nextQuantity,
-        },
+        data: lineData,
       });
     } else {
       await this.prisma.orderItem.create({
-        data: {
-          orderId: cart.id,
-          productVariantId: variant.id,
-          quantity: nextQuantity,
-          unitPriceCents: variant.priceCents,
-          lineTotalCents: variant.priceCents * nextQuantity,
-        },
+        data: { ...lineData, orderId: cart.id, productVariantId: variant.id },
       });
       // The first item on a fresh cart fixes the order currency.
       if (cart.currency !== variant.currency) {
@@ -321,6 +375,8 @@ export class OrdersService {
     dto: UpdateCartItemDto,
   ) {
     const cart = await this.requireCart(cartToken);
+    this.assertEditable(cart);
+
     const line = cart.items.find((item) => item.id === itemId);
     if (!line) {
       throw new NotFoundException('Cart item not found');
@@ -331,20 +387,20 @@ export class OrdersService {
       return this.removeItem(cartToken, itemId);
     }
 
-    const variant = await this.prisma.productVariant.findUnique({
-      where: { id: line.productVariantId },
-      select: { id: true, priceCents: true, productId: true },
-    });
-    if (!variant) {
-      throw new NotFoundException('Product variant is not available');
+    const variant = line.productVariant;
+    if (!variant.isActive || !variant.product.isActive) {
+      throw new BadRequestException(
+        `${variant.product.name} is no longer available.`,
+      );
     }
 
     await this.assertStock(
       cart.id,
-      variant.productId,
+      variant.product.id,
       variant.id,
       dto.quantity,
     );
+    await this.clearFailure(cart);
 
     await this.prisma.orderItem.update({
       where: { id: line.id },
@@ -361,11 +417,14 @@ export class OrdersService {
 
   async removeItem(cartToken: string | undefined, itemId: string) {
     const cart = await this.requireCart(cartToken);
+    this.assertEditable(cart);
+
     const line = cart.items.find((item) => item.id === itemId);
     if (!line) {
       throw new NotFoundException('Cart item not found');
     }
 
+    await this.clearFailure(cart);
     await this.prisma.orderItem.delete({ where: { id: line.id } });
     await this.recalculate(cart.id);
     return this.serialize(await this.requireCart(cartToken));
@@ -373,80 +432,20 @@ export class OrdersService {
 
   async clearCart(cartToken: string | undefined) {
     const cart = await this.requireCart(cartToken);
+    this.assertEditable(cart);
+
+    await this.clearFailure(cart);
     await this.prisma.orderItem.deleteMany({ where: { orderId: cart.id } });
     await this.recalculate(cart.id);
     return this.serialize(await this.requireCart(cartToken));
   }
 
-  /**
-   * Turn the cart into a real order. Prices are re-read from the variants at
-   * this moment so a stale cart cannot lock in an old price, and stock is
-   * re-checked because nothing was reserved while the cart sat idle.
-   */
-  async checkout(cartToken: string | undefined, dto: CheckoutDto) {
-    const cart = await this.requireCart(cartToken);
-
-    if (cart.items.length === 0) {
-      throw new BadRequestException('Your cart is empty.');
-    }
-
-    for (const item of cart.items) {
-      if (!item.productVariant.isActive) {
-        throw new BadRequestException(
-          item.productVariant.product.name + ' is no longer available.',
-        );
-      }
-      await this.assertStock(
-        cart.id,
-        item.productVariant.product.id,
-        item.productVariant.id,
-        item.quantity,
-      );
-      if (item.unitPriceCents !== item.productVariant.priceCents) {
-        await this.prisma.orderItem.update({
-          where: { id: item.id },
-          data: {
-            unitPriceCents: item.productVariant.priceCents,
-            lineTotalCents: item.productVariant.priceCents * item.quantity,
-          },
-        });
-      }
-    }
-
-    await this.recalculate(cart.id);
-
-    const placed = (await this.prisma.order.update({
-      where: { id: cart.id },
-      data: {
-        status: 'pending',
-        paymentProvider: dto.paymentProvider,
-        contactName: dto.contactName,
-        contactEmail: dto.contactEmail,
-        contactPhone: dto.contactPhone ?? null,
-        shippingAddress: dto.shippingAddress,
-        // Release the token so the next visit starts a fresh cart rather than
-        // reopening a submitted order.
-        cartToken: null,
-      },
-      include: cartInclude,
-    })) as CartRecord;
-
-    return {
-      orderId: placed.id,
-      status: placed.status,
-      totalCents: placed.totalCents,
-      currency: placed.currency,
-      paymentProvider: placed.paymentProvider,
-      itemCount: placed.items.reduce((sum, item) => sum + item.quantity, 0),
-    };
-  }
-
-  /** Read back a placed order, for the confirmation screen. */
+  /** Read back a placed order — the confirmation screen. */
   async getOrder(id: string) {
-    const order = (await this.prisma.order.findUnique({
+    const order = await this.prisma.order.findUnique({
       where: { id },
       include: cartInclude,
-    })) as CartRecord | null;
+    });
 
     if (!order || order.status === 'cart') {
       throw new NotFoundException('Order not found');
@@ -457,7 +456,7 @@ export class OrdersService {
       contactName: order.contactName,
       contactEmail: order.contactEmail,
       shippingAddress: order.shippingAddress,
-      paymentProvider: order.paymentProvider,
+      paidAt: order.paidAt,
       createdAt: order.createdAt,
     };
   }

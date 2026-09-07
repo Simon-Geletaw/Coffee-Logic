@@ -1,5 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Currency } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+
+/** Narrow an arbitrary query string to the Currency enum, or drop it. */
+function toCurrency(value: string | undefined): Currency | undefined {
+  return value && (Object.values(Currency) as string[]).includes(value)
+    ? (value as Currency)
+    : undefined;
+}
 
 export type CatalogFilter = {
   roastLevel?: string;
@@ -42,9 +50,10 @@ export class CatalogService {
    * to show, so it would render as a dead card in the shop grid.
    */
   async listProducts(filter: CatalogFilter = {}) {
+    const currency = toCurrency(filter.currency);
     const variantWhere = {
       isActive: true,
-      ...(filter.currency ? { currency: filter.currency } : {}),
+      ...(currency ? { currency } : {}),
     };
 
     const products = await this.prisma.product.findMany({

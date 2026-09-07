@@ -24,6 +24,6 @@
     "next": "16.1.6",
     "pnpm": "^11.5.1",
     "prettier": "^3.8.1",
-    "typescript": "^6.0.3"
+    "typescript": "^5.9.3"
   }
 }

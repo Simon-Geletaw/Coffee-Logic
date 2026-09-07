@@ -118,7 +118,8 @@ model Inventory {
   updatedAt DateTime @updatedAt
   status    Boolean  @default(true)
 
-  batch Batch @relation(fields: [batchId], references: [id])
+  batch        Batch              @relation(fields: [batchId], references: [id])
+  reservations StockReservation[]
 }
 
 model Order {
@@ -149,8 +150,9 @@ model Order {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  user  User?       @relation(fields: [userId], references: [id])
-  items OrderItem[]
+  user         User?              @relation(fields: [userId], references: [id])
+  items        OrderItem[]
+  reservations StockReservation[]
 }
 
 model OrderItem {
@@ -163,6 +165,26 @@ model OrderItem {
 
   order          Order          @relation(fields: [orderId], references: [id])
   productVariant ProductVariant @relation(fields: [productVariantId], references: [id])
+  reservation    StockReservation?
+}
+
+// Units held for a pending order, allocated from one batch's inventory.
+// Created when a payment session opens; deleted when the order is paid
+// (units leave onHand) or fails/expires (units return to available).
+// Persisting the allocation is what makes release and commit exact.
+model StockReservation {
+  id          String   @id @default(uuid())
+  orderId     String
+  orderItemId String   @unique
+  inventoryId String
+  quantity    Int
+  createdAt   DateTime @default(now())
+
+  order     Order     @relation(fields: [orderId], references: [id])
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+  inventory Inventory @relation(fields: [inventoryId], references: [id])
+
+  @@index([orderId])
 }
 
 model Subscription {

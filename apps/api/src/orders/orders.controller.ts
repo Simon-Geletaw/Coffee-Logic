@@ -9,26 +9,23 @@ import {
   Post,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
-import {
-  AddCartItemDto,
-  CheckoutDto,
-  UpdateCartItemDto,
-} from './dto/create-order.dto';
+import { AddCartItemDto, UpdateCartItemDto } from './dto/create-order.dto';
 
 /**
  * Anonymous storefront cart. Public by design — shoppers have no accounts.
  *
- * A cart is an Order row with status 'cart', found again by the opaque
- * `x-cart-token` header. POST /cart/items mints that token on the first add
- * and returns it; the browser stores it and replays it on later requests.
+ * A cart is an Order row in status cart | pending | failed, found again by
+ * the opaque `x-cart-token` header. POST /cart/items mints that token on the
+ * first add and returns it; the browser stores it and replays it thereafter.
  *
  *   GET    /cart                — current cart (empty shape when no token)
  *   POST   /cart/items          — add a variant; returns { cartToken, cart }
  *   PATCH  /cart/items/:itemId  — set a line quantity (0 removes the line)
  *   DELETE /cart/items/:itemId  — remove a line
  *   DELETE /cart                — empty the cart
- *   POST   /cart/checkout       — cart -> pending order
  *   GET    /cart/orders/:id     — read back a placed order
+ *
+ * Checkout lives under /checkout (see CheckoutController).
  */
 @Controller('cart')
 export class OrdersController {
@@ -67,14 +64,6 @@ export class OrdersController {
   @Delete()
   clearCart(@Headers('x-cart-token') cartToken?: string) {
     return this.ordersService.clearCart(cartToken);
-  }
-
-  @Post('checkout')
-  checkout(
-    @Body() dto: CheckoutDto,
-    @Headers('x-cart-token') cartToken?: string,
-  ) {
-    return this.ordersService.checkout(cartToken, dto);
   }
 
   @Get('orders/:id')

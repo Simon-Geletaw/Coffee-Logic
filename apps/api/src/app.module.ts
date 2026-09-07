@@ -10,6 +10,9 @@ import { CatalogModule } from './catalog/catalog.module';
 import { VariantsModule } from './variants/variants.module';
 import { OrdersModule } from './orders/orders.module';
 import { RedisModule } from './redis/redis.module';
+import { ShippingModule } from './shipping/shipping.module';
+import { PaymentsModule } from './payments/payments.module';
+import { CheckoutModule } from './checkout/checkout.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/env.config';
@@ -27,6 +30,9 @@ import { APP_GUARD } from '@nestjs/core/constants';
     CatalogModule,
     VariantsModule,
     OrdersModule,
+    ShippingModule,
+    PaymentsModule,
+    CheckoutModule,
     RedisModule,
     // Enables @Cron() decorators — used by the checkout hold sweeper.
     ScheduleModule.forRoot(),

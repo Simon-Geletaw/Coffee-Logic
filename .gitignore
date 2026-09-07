@@ -31,3 +31,8 @@ test-results/
 .agents/
 docs/
 
+
+# Installers must never be committed
+*.exe
+*.msi
+apps/api/tsconfig.build.tsbuildinfo

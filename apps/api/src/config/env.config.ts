@@ -21,7 +21,10 @@ const envSchema = z
     DATABASE_URL: z
       .string()
       .nonempty('DATABASE_URL is required')
-      .startsWith('postgresql://', 'DATABASE_URL must start with "postgresql://"'),
+      .startsWith(
+        'postgresql://',
+        'DATABASE_URL must start with "postgresql://"',
+      ),
 
     JWT_SECRET: z
       .string()
@@ -36,7 +39,10 @@ const envSchema = z
 
     STRIPE_SECRET_KEY: z
       .string()
-      .regex(/^sk_(test|live)_/, 'STRIPE_SECRET_KEY must start with sk_test_ or sk_live_')
+      .regex(
+        /^sk_(test|live)_/,
+        'STRIPE_SECRET_KEY must start with sk_test_ or sk_live_',
+      )
       .optional(),
     STRIPE_WEBHOOK_SECRET: z
       .string()
@@ -50,7 +56,14 @@ const envSchema = z
     CHAPA_WEBHOOK_SECRET: z.string().min(16).optional(),
 
     // Minutes a reservation is held while the shopper is on the payment page.
-    CHECKOUT_HOLD_MINUTES: z.coerce.number().int().min(5).max(120).default(30),
+    // Stripe requires a Checkout Session to live at least 30 minutes.
+    CHECKOUT_HOLD_MINUTES: z.coerce.number().int().min(30).max(120).default(30),
+
+    // Swap both providers for an in-process fake (Playwright, local demos).
+    PAYMENTS_FAKE: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true'),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== 'production') return;
@@ -71,6 +84,14 @@ const envSchema = z
           message: `${key} is required in production`,
         });
       }
+    }
+
+    if (env.PAYMENTS_FAKE) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['PAYMENTS_FAKE'],
+        message: 'The fake payment provider cannot run in production',
+      });
     }
 
     if (env.STRIPE_SECRET_KEY?.startsWith('sk_test_')) {

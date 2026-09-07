@@ -1,16 +1,4 @@
-import {
-  IsIn,
-  IsInt,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Max,
-  MaxLength,
-  Min,
-} from 'class-validator';
-
-export const PAYMENT_PROVIDERS = ['chapa', 'stripe'] as const;
-export type PaymentProvider = (typeof PAYMENT_PROVIDERS)[number];
+import { IsInt, IsUUID, Max, Min } from 'class-validator';
 
 /** Add one variant to the cart, or increase its quantity if already present. */
 export class AddCartItemDto {
@@ -29,29 +17,4 @@ export class UpdateCartItemDto {
   @Min(0, { message: 'quantity cannot be negative' })
   @Max(20, { message: 'quantity must not exceed 20' })
   quantity!: number;
-}
-
-/** Contact + shipping details that turn a cart into a pending order. */
-export class CheckoutDto {
-  @IsString()
-  @MaxLength(120)
-  contactName!: string;
-
-  @IsString()
-  @MaxLength(160)
-  contactEmail!: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(40)
-  contactPhone?: string;
-
-  @IsString()
-  @MaxLength(400)
-  shippingAddress!: string;
-
-  @IsIn(PAYMENT_PROVIDERS, {
-    message: 'paymentProvider must be chapa or stripe',
-  })
-  paymentProvider!: PaymentProvider;
 }
