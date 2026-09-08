@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductDto } from 'src/products/dto/create-product.dto';
+import { CatalogCacheService } from 'src/catalog/catalog-cache.service';
 
 type productAttribute = {
   roastLevel?: string;
@@ -21,7 +22,10 @@ type productAttribute = {
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CatalogCacheService,
+  ) {}
 
   async getProducts(filter: productAttribute = {}) {
     const products = await this.prisma.product.findMany({
@@ -84,6 +88,7 @@ export class ProductService {
         isActive: true,
       },
     });
+    await this.cache.invalidate();
     return newProduct;
   }
 
@@ -117,6 +122,7 @@ export class ProductService {
       createdProducts.push(created);
     }
 
+    await this.cache.invalidate();
     return {
       status: 201,
       count: createdProducts.length,
@@ -159,6 +165,7 @@ export class ProductService {
         imageUrl: updatesProduct?.imageUrl ?? existingProduct.imageUrl,
       },
     });
+    await this.cache.invalidate();
     return updatedProduct;
   }
   async deleteProduct(id: string) {
@@ -181,6 +188,7 @@ export class ProductService {
     if (!DeletedProduct) {
       throw new InternalServerErrorException('Failed to delete product');
     }
+    await this.cache.invalidate();
     if (!DeletedProduct.isActive) {
       return {
         id: DeletedProduct.id,

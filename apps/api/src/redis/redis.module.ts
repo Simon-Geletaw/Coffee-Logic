@@ -1,4 +1,4 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module, type OnModuleDestroy, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { REDIS } from './redis.constants';
@@ -22,16 +22,26 @@ import { REDIS } from './redis.constants';
         if (!url) return null;
 
         return new Redis(url, {
-          // Don't hang a request forever if Redis is down — surface fast and
-          // let the caller decide (checkout fails closed, catalog falls back).
+          // Connect at boot. Commands issued during the brief connect window
+          // queue (offline queue on), but a Redis that is actually down fails
+          // each command after one retry instead of hanging the request —
+          // checkout then fails closed, the catalogue falls back to Postgres.
           connectTimeout: 2_000,
           maxRetriesPerRequest: 1,
-          enableOfflineQueue: false,
-          lazyConnect: true,
+          enableOfflineQueue: true,
+          lazyConnect: false,
         });
       },
     },
   ],
   exports: [REDIS],
 })
-export class RedisModule {}
+export class RedisModule implements OnModuleDestroy {
+  constructor(@Inject(REDIS) private readonly redis: Redis | null) {}
+
+  // Close the socket on shutdown so tests and graceful restarts do not hang
+  // on an open handle.
+  async onModuleDestroy(): Promise<void> {
+    await this.redis?.quit().catch(() => undefined);
+  }
+}

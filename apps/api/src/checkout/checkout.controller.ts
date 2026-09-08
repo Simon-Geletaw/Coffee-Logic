@@ -25,8 +25,8 @@ export class CheckoutController {
   constructor(private readonly checkout: CheckoutService) {}
 
   // Tighter than the global limit: opening provider sessions costs money and
-  // API quota, and a human never legitimately clicks "Place order" 5×/minute.
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  // API quota, and a human never legitimately clicks "Continue" 10×/minute.
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('checkout/session')
   createSession(
     @Body() dto: CreateCheckoutSessionDto,

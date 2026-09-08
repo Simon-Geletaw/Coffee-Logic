@@ -4,9 +4,10 @@ import { ProductService } from '../product/product.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { CatalogModule } from 'src/catalog/catalog.module';
 
 @Module({
-  imports: [],
+  imports: [CatalogModule],
   controllers: [ProductsController],
   providers: [ProductService, PrismaService, JwtAuthGuard, RolesGuard],
 })

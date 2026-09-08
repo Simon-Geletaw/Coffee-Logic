@@ -61,6 +61,8 @@ test.describe('shop → cart → checkout → paid', () => {
   test('a failed payment returns the shopper to an editable cart with a retry', async ({ page }) => {
     await page.goto('/shop');
     await page.locator('article').first().getByRole('button', { name: /add to cart/i }).click();
+    // Wait for the server to acknowledge before leaving the page.
+    await expect(page.getByText(/added to cart/i)).toBeVisible();
     await page.goto('/checkout');
 
     await page.getByLabel(/full name/i).fill('Selam Tadesse');
@@ -75,7 +77,8 @@ test.describe('shop → cart → checkout → paid', () => {
     await expect(page.getByText(/payment not completed/i)).toBeVisible({ timeout: 15_000 });
 
     await page.goto('/cart');
-    await expect(page.getByRole('alert')).toContainText(/payment not completed/i);
+    const cartRegion = page.getByRole('region', { name: /cart items/i });
+    await expect(cartRegion.getByRole('alert')).toContainText(/payment not completed/i);
     await expect(page.getByRole('link', { name: /try payment again/i })).toBeVisible();
     // Lines are editable again.
     await expect(page.getByRole('button', { name: /increase/i }).first()).toBeEnabled();
@@ -84,6 +87,8 @@ test.describe('shop → cart → checkout → paid', () => {
   test('the cart is locked while a payment is pending', async ({ page }) => {
     await page.goto('/shop');
     await page.locator('article').first().getByRole('button', { name: /add to cart/i }).click();
+    // Wait for the server to acknowledge before leaving the page.
+    await expect(page.getByText(/added to cart/i)).toBeVisible();
     await page.goto('/checkout');
 
     await page.getByLabel(/full name/i).fill('Selam Tadesse');
@@ -93,8 +98,10 @@ test.describe('shop → cart → checkout → paid', () => {
     await expect(page).toHaveURL(/\/checkout\/return\?order=/);
 
     await page.goto('/cart');
-    await expect(page.getByRole('status')).toContainText(/payment in progress/i);
+    const cartRegion = page.getByRole('region', { name: /cart items/i });
+    await expect(cartRegion.getByRole('status')).toContainText(/payment in progress/i);
     await expect(page.getByRole('button', { name: /increase/i })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: /check payment status/i })).toBeVisible();
+    // Offered twice on purpose (banner + summary); either is fine.
+    await expect(page.getByRole('link', { name: /check payment status/i }).first()).toBeVisible();
   });
 });

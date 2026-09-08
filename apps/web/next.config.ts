@@ -4,6 +4,9 @@ import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 const distDir = process.env.COFFEE_LOGIC_NEXT_DIST_DIR ?? '.next-web';
 
 const baseConfig: NextConfig = {
+  // Docker builds set NEXT_STANDALONE=1 to emit a self-contained server.js
+  // (see apps/web/Dockerfile). Local builds keep the default layout.
+  ...(process.env.NEXT_STANDALONE ? { output: 'standalone' as const } : {}),
   // Keep build artifacts scoped to this app in a pnpm workspace.
   // The dev script can override this to a unique folder to avoid deletes on startup.
   distDir,

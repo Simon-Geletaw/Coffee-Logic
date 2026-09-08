@@ -35,7 +35,7 @@ export default tseslint.config(
   {
     // Jest mocks are `any` by nature and are passed to expect() unbound;
     // these rules protect production code, not test doubles.
-    files: ['**/*.spec.ts'],
+    files: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
     rules: {
       '@typescript-eslint/unbound-method': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',

@@ -97,7 +97,16 @@ export class CheckoutService {
     const redis = this.redisOrNull();
     if (!redis) return fn();
 
-    const acquired = await redis.set(key, '1', 'PX', LOCK_TTL_MS, 'NX');
+    let acquired: string | null;
+    try {
+      acquired = await redis.set(key, '1', 'PX', LOCK_TTL_MS, 'NX');
+    } catch (error) {
+      // Without the lock two requests could double-reserve: fail closed.
+      this.logger.error(`Redis lock unavailable: ${(error as Error).message}`);
+      throw new ServiceUnavailableException(
+        'Checkout is temporarily unavailable. Please try again in a moment.',
+      );
+    }
     if (acquired !== 'OK') {
       throw new ConflictException(
         'Another checkout is already in progress for this cart.',
@@ -115,8 +124,13 @@ export class CheckoutService {
   ): Promise<CheckoutSessionResponse | null> {
     const redis = this.redisOrNull();
     if (!redis) return null;
-    const cached = await redis.get(`idem:checkout:${key}`);
-    return cached ? (JSON.parse(cached) as CheckoutSessionResponse) : null;
+    try {
+      const cached = await redis.get(`idem:checkout:${key}`);
+      return cached ? (JSON.parse(cached) as CheckoutSessionResponse) : null;
+    } catch (error) {
+      this.logger.warn(`Idempotency read failed: ${(error as Error).message}`);
+      return null;
+    }
   }
 
   private async rememberIdempotent(
@@ -125,6 +139,18 @@ export class CheckoutService {
   ): Promise<void> {
     const redis = this.redisOrNull();
     if (!redis) return;
+    try {
+      await this.writeIdempotent(redis, key, value);
+    } catch (error) {
+      this.logger.warn(`Idempotency write failed: ${(error as Error).message}`);
+    }
+  }
+
+  private async writeIdempotent(
+    redis: Redis,
+    key: string,
+    value: CheckoutSessionResponse,
+  ): Promise<void> {
     await redis.set(
       `idem:checkout:${key}`,
       JSON.stringify(value),
@@ -150,8 +176,13 @@ export class CheckoutService {
   ): Promise<CheckoutSessionResponse | null> {
     const redis = this.redisOrNull();
     if (!redis) return null;
-    const cached = await redis.get(`checkout:redirect:${orderId}`);
-    return cached ? (JSON.parse(cached) as CheckoutSessionResponse) : null;
+    try {
+      const cached = await redis.get(`checkout:redirect:${orderId}`);
+      return cached ? (JSON.parse(cached) as CheckoutSessionResponse) : null;
+    } catch (error) {
+      this.logger.warn(`Redirect read failed: ${(error as Error).message}`);
+      return null;
+    }
   }
 
   /* ─── Session creation ───────────────────────────────────────────── */
@@ -817,14 +848,21 @@ export class CheckoutService {
   private async claimReconcile(orderId: string): Promise<boolean> {
     const redis = this.redisOrNull();
     if (!redis) return true;
-    const claimed = await redis.set(
+    try {
+      return (await this.tryClaimReconcile(redis, orderId)) === 'OK';
+    } catch {
+      return true; // reconciling too often is harmless; not reconciling is not
+    }
+  }
+
+  private tryClaimReconcile(redis: Redis, orderId: string) {
+    return redis.set(
       `reconcile:${orderId}`,
       '1',
       'EX',
       RECONCILE_THROTTLE_SECONDS,
       'NX',
     );
-    return claimed === 'OK';
   }
 
   private async reconcile(

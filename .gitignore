@@ -36,3 +36,5 @@ docs/
 *.exe
 *.msi
 apps/api/tsconfig.build.tsbuildinfo
+# Generated Prisma client leftovers (the real client lives in node_modules)
+apps/api/src/generated/

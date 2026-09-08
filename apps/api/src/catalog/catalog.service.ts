@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Currency } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CatalogCacheService } from './catalog-cache.service';
 
 /** Narrow an arbitrary query string to the Currency enum, or drop it. */
 function toCurrency(value: string | undefined): Currency | undefined {
@@ -42,14 +43,27 @@ const productSelect = {
 
 @Injectable()
 export class CatalogService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CatalogCacheService,
+  ) {}
 
   /**
    * Storefront product listing. Only active products with at least one active
    * variant are returned — a product with no purchasable variant has no price
    * to show, so it would render as a dead card in the shop grid.
    */
-  async listProducts(filter: CatalogFilter = {}) {
+  listProducts(filter: CatalogFilter = {}) {
+    return this.cache.getOrSet(
+      CatalogCacheService.keyFor('list', {
+        ...filter,
+        currency: toCurrency(filter.currency),
+      }),
+      () => this.loadProducts(filter),
+    );
+  }
+
+  private async loadProducts(filter: CatalogFilter) {
     const currency = toCurrency(filter.currency);
     const variantWhere = {
       isActive: true,
@@ -84,7 +98,20 @@ export class CatalogService {
   }
 
   async getProduct(id: string) {
-    const product = await this.prisma.product.findFirst({
+    const product = await this.cache.getOrSet(
+      CatalogCacheService.keyFor('product', { id }),
+      () => this.loadProduct(id),
+    );
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return product;
+  }
+
+  private loadProduct(id: string) {
+    return this.prisma.product.findFirst({
       where: { id, isActive: true },
       select: {
         ...productSelect,
@@ -95,19 +122,19 @@ export class CatalogService {
         },
       },
     });
-
-    if (!product) {
-      throw new NotFoundException('Product not found');
-    }
-
-    return product;
   }
 
   /**
    * Distinct values for each filterable attribute, so the shop filter bar is
    * driven by what is actually in the catalogue rather than a hardcoded list.
    */
-  async getFacets() {
+  getFacets() {
+    return this.cache.getOrSet(CatalogCacheService.keyFor('facets'), () =>
+      this.loadFacets(),
+    );
+  }
+
+  private async loadFacets() {
     const products = await this.prisma.product.findMany({
       where: { isActive: true, variants: { some: { isActive: true } } },
       select: {

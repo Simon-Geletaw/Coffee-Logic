@@ -6,6 +6,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateVariantDto } from './dto/create-variant.dto';
 import { UpdateVariantDto } from './dto/update-variant.dto';
+import { CatalogCacheService } from 'src/catalog/catalog-cache.service';
 
 const variantSelect = {
   id: true,
@@ -20,7 +21,10 @@ const variantSelect = {
 
 @Injectable()
 export class VariantsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CatalogCacheService,
+  ) {}
 
   findAll(productId?: string) {
     return this.prisma.productVariant.findMany({
@@ -53,7 +57,7 @@ export class VariantsService {
       );
     }
 
-    return this.prisma.productVariant.create({
+    const created = await this.prisma.productVariant.create({
       data: {
         productId: dto.productId,
         weightGrams: dto.weightGrams,
@@ -64,6 +68,8 @@ export class VariantsService {
       },
       select: variantSelect,
     });
+    await this.cache.invalidate();
+    return created;
   }
 
   async update(id: string, dto: UpdateVariantDto) {
@@ -75,7 +81,7 @@ export class VariantsService {
       throw new NotFoundException('Variant not found');
     }
 
-    return this.prisma.productVariant.update({
+    const updated = await this.prisma.productVariant.update({
       where: { id },
       data: {
         ...(dto.weightGrams === undefined
@@ -88,6 +94,8 @@ export class VariantsService {
       },
       select: variantSelect,
     });
+    await this.cache.invalidate();
+    return updated;
   }
 
   /**
@@ -109,6 +117,7 @@ export class VariantsService {
       select: variantSelect,
     });
 
+    await this.cache.invalidate();
     return { id: updated.id, status: 'deleted' as const };
   }
 }
