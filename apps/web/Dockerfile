@@ -7,7 +7,7 @@ WORKDIR /repo
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/web/package.json apps/web/
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile --filter web...
+    pnpm install --frozen-lockfile --filter web...       --config.fetch-retries=5 --config.fetch-timeout=300000
 
 COPY apps/web ./apps/web
 # NEXT_PUBLIC_* is inlined at build time; pass the public API URL as a build arg.

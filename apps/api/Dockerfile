@@ -4,12 +4,17 @@ FROM node:24-alpine AS build
 RUN corepack enable && corepack prepare pnpm@11.5.1 --activate
 WORKDIR /repo
 
+# prisma.config.ts refuses to load without DATABASE_URL, even for `generate`
+# (which never connects). A placeholder satisfies it at build time only.
+ENV DATABASE_URL=postgresql://build:build@localhost:5432/build
+
 # Lockfile-first for layer caching: deps only re-install when they change.
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json prisma.config.ts ./
 COPY apps/api/package.json apps/api/
 COPY prisma ./prisma
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile --filter api...
+    pnpm install --frozen-lockfile --filter api... \
+      --config.fetch-retries=5 --config.fetch-timeout=300000
 
 COPY apps/api ./apps/api
 RUN pnpm -C apps/api exec prisma generate \
@@ -28,7 +33,9 @@ COPY --from=build /repo/apps/api/dist ./dist
 COPY prisma ./prisma
 COPY prisma.config.ts ./
 # The runtime image has its own @prisma/client; generate the engine for it.
-RUN pnpm exec prisma generate && chown -R node:node /app
+# Placeholder URL for the same reason as above; the real one arrives at run time.
+RUN DATABASE_URL=postgresql://build:build@localhost:5432/build pnpm exec prisma generate \
+ && chown -R node:node /app
 
 USER node
 EXPOSE 3001

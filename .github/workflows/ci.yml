@@ -180,6 +180,28 @@ jobs:
             apps/web/web.log
           retention-days: 7
 
+  # ── Dockerfiles must build (no push) ───────────────────────────────────
+  docker:
+    name: docker · build ${{ matrix.app }} image
+    runs-on: ubuntu-latest
+    needs: [api, web]
+    strategy:
+      matrix:
+        app: [api, web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          push: false
+          tags: coffee-logic-${{ matrix.app }}:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
+
   # ── Supply chain / secrets ─────────────────────────────────────────────
   security:
     name: security · audit · secret scan
