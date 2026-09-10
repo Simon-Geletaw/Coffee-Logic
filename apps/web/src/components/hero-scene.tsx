@@ -54,7 +54,8 @@ function CoffeeScene({ onReady, onFailure }: Omit<SceneProps, "running">) {
   const elapsed = useRef(0);
   const firstFrame = useRef(false);
   const input = useRef({ x: 0, y: 0, scroll: 0 });
-  const geometry = useMemo(createBean, []);
+  const steamMesh = useRef<THREE.Mesh>(null);
+  const geometry = useMemo(() => createBean(), []);
   const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.48, metalness: 0 }), []);
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const steam = useMemo(() => ({ time: { value: 0 } }), []);
@@ -108,7 +109,9 @@ function CoffeeScene({ onReady, onFailure }: Omit<SceneProps, "running">) {
       });
       cloud.current.instanceMatrix.needsUpdate = true;
     }
-    steam.time.value = t;
+    if (steamMesh.current) {
+      (steamMesh.current.material as THREE.ShaderMaterial).uniforms.time.value = t;
+    }
   });
 
   return (
@@ -122,7 +125,7 @@ function CoffeeScene({ onReady, onFailure }: Omit<SceneProps, "running">) {
       <group ref={group} position={[viewport.width * 0.23, 0, 0]}>
         <mesh ref={mainBean} geometry={geometry} material={material} scale={1.75} />
         <instancedMesh ref={cloud} args={[geometry, material, COUNT]} frustumCulled={false} />
-        <mesh position={[0, 0, -5]}>
+        <mesh ref={steamMesh} position={[0, 0, -5]}>
           <planeGeometry args={[11, 11]} />
           <shaderMaterial uniforms={steam} vertexShader="varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}" fragmentShader={steamFragment} transparent depthWrite={false} />
         </mesh>
