@@ -15,10 +15,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
-      - run: pnpm ci
-      - run: pnpm -C apps/web run lint
-      - run: pnpm -C apps/api run lint
+          cache: npm
+      - run: npm ci
+      - run: npm -C apps/web run lint
+      - run: npm -C apps/api run lint
 
-      - run: pnpm run typecheck
-      - run: pnpm run build
+      - run: npm run typecheck
+      - run: npm run build
