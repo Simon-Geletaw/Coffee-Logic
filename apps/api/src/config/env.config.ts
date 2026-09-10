@@ -21,7 +21,10 @@ const envSchema = z
     DATABASE_URL: z
       .string()
       .nonempty('DATABASE_URL is required')
-      .startsWith('postgresql://', 'DATABASE_URL must start with "postgresql://"'),
+      .startsWith(
+        'postgresql://',
+        'DATABASE_URL must start with "postgresql://"',
+      ),
 
     JWT_SECRET: z
       .string()
@@ -36,7 +39,10 @@ const envSchema = z
 
     STRIPE_SECRET_KEY: z
       .string()
-      .regex(/^sk_(test|live)_/, 'STRIPE_SECRET_KEY must start with sk_test_ or sk_live_')
+      .regex(
+        /^sk_(test|live)_/,
+        'STRIPE_SECRET_KEY must start with sk_test_ or sk_live_',
+      )
       .optional(),
     STRIPE_WEBHOOK_SECRET: z
       .string()
