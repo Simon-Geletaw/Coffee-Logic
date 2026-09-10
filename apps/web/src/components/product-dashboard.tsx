@@ -39,7 +39,7 @@ export function ProductDashboard({ queryKeyPrefix, canManage = false }: ProductD
   const createMutation = useCreateProductMutation(queryKeyPrefix);
   const deleteMutation = useDeleteProductMutation(queryKeyPrefix);
 
-  const data = productsQuery.data ?? [];
+  const data = useMemo(() => productsQuery.data ?? [], [productsQuery.data]);
 
   // Pagination config
   const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));

@@ -8,6 +8,8 @@ type RequestOptions = {
   body?: unknown;
   auth?: 'required' | 'none';
   timeoutMs?: number;
+  /** Extra headers, e.g. the storefront's x-cart-token. Skipped when empty. */
+  headers?: Record<string, string | undefined>;
 };
 
 export class HttpError extends Error {
@@ -39,6 +41,10 @@ export async function requestJson<T>(path: string, options: RequestOptions = {})
 
     if (options.body !== undefined) {
       headers.set('Content-Type', 'application/json');
+    }
+
+    for (const [key, value] of Object.entries(options.headers ?? {})) {
+      if (value) headers.set(key, value);
     }
 
     if (auth === 'required') {

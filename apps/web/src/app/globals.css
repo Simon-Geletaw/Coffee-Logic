@@ -58,33 +58,6 @@ body {
   overflow-x: hidden;
 }
 
-body::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background-image:
-    linear-gradient(to right, transparent 0 23px, var(--bg-grid) 24px),
-    linear-gradient(to bottom, transparent 0 23px, var(--bg-grid) 24px);
-  background-size: 24px 24px;
-  pointer-events: none;
-}
-
-/* ─── Admin Layout ───────────────────────────────────────────────────── */
-main {
-  margin-inline: auto;
-  width: 100%;
-  max-width: 85rem;
-  padding: 1rem;
-  min-height: 100vh;
-}
-
-@media (min-width: 768px) {
-  main {
-    padding: 2rem;
-  }
-}
-
 /* ─── Panels & Cards ─────────────────────────────────────────────────── */
 .panel {
   border: 1px solid var(--line);
@@ -606,6 +579,104 @@ select.field:hover {
   to { opacity: 1; transform: translateY(0); }
 }
 
+
+/* ─── Hero (storefront) ──────────────────────────────────────────────── */
+.hero-stagger > * {
+  animation: fade-up 500ms ease both;
+}
+.hero-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.hero-stagger > *:nth-child(2) { animation-delay: 70ms; }
+.hero-stagger > *:nth-child(3) { animation-delay: 140ms; }
+.hero-stagger > *:nth-child(4) { animation-delay: 210ms; }
+
+.btn-hero-primary,
+.btn-hero-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 9999px;
+  padding: 0.875rem 1.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 200ms ease, border-color 200ms ease,
+    transform 200ms ease, box-shadow 200ms ease;
+}
+.btn-hero-primary:focus-visible,
+.btn-hero-ghost:focus-visible {
+  outline: 2px solid #e2a043;
+  outline-offset: 3px;
+}
+
+.btn-hero-primary {
+  background: #e2a043;
+  color: #1c120a;
+}
+.btn-hero-primary:hover {
+  background: #efb25a;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(226, 160, 67, 0.35);
+}
+
+.btn-hero-ghost {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+}
+.btn-hero-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.75);
+}
+
+/* ─── Storefront underline CTAs ──────────────────────────────────────── */
+.cta-underline,
+.cta-underline-light {
+  display: inline-flex;
+  align-items: center;
+  padding-bottom: 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  line-height: 1;
+  border-bottom: 1px solid;
+  transition: color 200ms ease, border-color 200ms ease;
+}
+.cta-underline:focus-visible,
+.cta-underline-light:focus-visible {
+  outline: 2px solid #b08a3e;
+  outline-offset: 4px;
+}
+
+.cta-underline {
+  color: #2e2a20;
+  border-color: rgba(46, 42, 32, 0.65);
+}
+.cta-underline:hover {
+  color: #8a6420;
+  border-color: #b08a3e;
+}
+
+.cta-underline-light {
+  color: #f2eddf;
+  border-color: rgba(242, 237, 223, 0.65);
+}
+.cta-underline-light:hover {
+  color: #e4c87e;
+  border-color: #c9a45c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-stagger > * {
+    animation: none;
+  }
+  .btn-hero-primary:hover,
+  .btn-hero-ghost:hover {
+    transform: none;
+  }
+}
+
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -629,4 +700,13 @@ select.field:hover {
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+@theme {
+  --color-forest: #0F2418;
+  --color-cream:  #F5EFE6;
+  --color-cream-soft: #F3ECE1;
+  --color-gold:  #B08A3E;
+  --color-ink:   #1F1A14;
+  --font-display: var(--font-display);
 }

@@ -7,6 +7,7 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -20,6 +21,7 @@ enum UserRole {
 }
 
 enum OrderStatus {
+  cart
   pending
   paid
   failed
@@ -35,6 +37,11 @@ enum SubscriptionStatus {
 enum WebhookStatus {
   success
   fail
+}
+
+enum Currency {
+  ETB
+  USD
 }
 
 model User {
@@ -64,6 +71,7 @@ model Product {
   origin         String
   process        String
   caffeine       String
+  imageUrl       String?
   sensoryProfile Json?
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
@@ -78,6 +86,7 @@ model ProductVariant {
   productId   String
   weightGrams Int
   priceCents  Int
+  currency    String  @default("ETB")
   sku         String?
   isActive    Boolean @default(true)
 
@@ -107,24 +116,35 @@ model Inventory {
   reserved  Int
   available Int
   updatedAt DateTime @updatedAt
-  status  Boolean @default(true)
+  status    Boolean  @default(true)
 
   batch Batch @relation(fields: [batchId], references: [id])
 }
 
 model Order {
-  id              String      @id @default(uuid())
-  userId          String?
-  status          OrderStatus
-  totalCents      Int
-  currency        String
-  paymentProvider String
-  paymentIntentId String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id               String      @id @default(uuid())
+  userId           String?
+  cartToken        String?     @unique
+  status           OrderStatus
+  totalCents       Int         @default(0)
+  subtotalCents    Int         @default(0)
+  totalWeightGrams Int         @default(0)
 
-  user  User?       @relation(fields: [userId], references: [id])
-  items OrderItem[]
+  currency         String      @default("ETB")
+  paymentProvider  String?
+  paymentIntentId  String? // Stripe session id or Chapa tx_ref
+  contactName      String?
+  contactEmail     String?
+  contactPhone     String?
+  shippingAddress  String?
+  shippingcents    Int         @default(0)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  paideAt          DateTime?
+  failureReason    DateTime?
+  paymentExpiresAt DateTime?
+  user             User?       @relation(fields: [userId], references: [id])
+  items            OrderItem[]
 }
 
 model OrderItem {
@@ -185,4 +205,16 @@ model AuditEvent {
   createdAt   DateTime @default(now())
 
   actor User @relation("AuditActor", fields: [actorUserId], references: [id])
+}
+
+model ShippingRate {
+  id       String   @id @default(uuid())
+  currency Currency
+  maxGrams Int // tota
+  cents    Int
+  label    Int
+  isActive Boolean  @default(true)
+  name     String
+
+  @@unique([currency, maxGrams])
 }

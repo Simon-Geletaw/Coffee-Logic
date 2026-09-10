@@ -23,8 +23,8 @@ export function InventoryDashboard({ queryKeyPrefix }: InventoryDashboardProps) 
   const adjustMutation = useAdjustInventoryMutation(queryKeyPrefix);
   const deleteMutation = useDeleteInventoryMutation(queryKeyPrefix);
 
-  const inventory = inventoryQuery.data ?? [];
-  const batches = batchesQuery.data ?? [];
+  const inventory = useMemo(() => inventoryQuery.data ?? [], [inventoryQuery.data]);
+  const batches = useMemo(() => batchesQuery.data ?? [], [batchesQuery.data]);
 
   // Compute which batches do NOT have an inventory record yet
   const batchIdsWithInventory = useMemo(

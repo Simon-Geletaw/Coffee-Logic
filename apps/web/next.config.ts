@@ -7,6 +7,17 @@ const baseConfig: NextConfig = {
   // Keep build artifacts scoped to this app in a pnpm workspace.
   // The dev script can override this to a unique folder to avoid deletes on startup.
   distDir,
+  images: {
+    // Serve images at maximum quality (quality={100} is used across the storefront).
+    qualities: [75, 100],
+    // Prefer AVIF, fall back to WebP — best fidelity per byte at high quality.
+    formats: ['image/avif', 'image/webp'],
+    // Product.imageUrl can point at an external host. Optimised images are
+    // re-served from this origin, so the CSP img-src 'self' rule still covers
+    // them. NOTE: narrow this to your actual image host before production —
+    // a wildcard lets anyone use the optimiser as an open image proxy.
+    remotePatterns: [{ protocol: 'https', hostname: '**' }],
+  },
   async headers() {
     return [
       {
@@ -31,7 +42,7 @@ const baseConfig: NextConfig = {
           {
             key: 'Content-Security-Policy',
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' http://localhost:3001 https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://tile.openstreetmap.org; connect-src 'self' http://localhost:3001 https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
           },
           {
             key: 'Cache-Control',

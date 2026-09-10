@@ -16,6 +16,7 @@ type productAttribute = {
   name?: string;
   process?: string;
   description?: string;
+  imageUrl?: string;
 };
 
 @Injectable()
@@ -48,6 +49,7 @@ export class ProductService {
         origin: true,
         process: true,
         caffeine: true,
+        imageUrl: true,
       },
       orderBy: {
         name: 'asc',
@@ -62,6 +64,7 @@ export class ProductService {
       origin: product.origin,
       process: product.process,
       caffeine: product.caffeine,
+      imageUrl: product.imageUrl,
     }));
   }
   async createProduct(product: CreateProductDto) {
@@ -77,6 +80,7 @@ export class ProductService {
         process: product.process ?? '',
         caffeine: product.caffeine ?? '',
         description: product.description ?? '',
+        imageUrl: product.imageUrl ?? null,
         isActive: true,
       },
     });
@@ -106,6 +110,7 @@ export class ProductService {
           process: product.process ?? '',
           caffeine: product.caffeine ?? '',
           description: product.description ?? '',
+          imageUrl: product.imageUrl ?? null,
           isActive: true,
         },
       });
@@ -135,6 +140,7 @@ export class ProductService {
         origin: true,
         process: true,
         caffeine: true,
+        imageUrl: true,
       },
     });
     if (!existingProduct) {
@@ -150,6 +156,7 @@ export class ProductService {
         process: updatesProduct?.process ?? existingProduct.process,
         caffeine: updatesProduct?.caffeine ?? existingProduct.caffeine,
         description: updatesProduct?.description ?? existingProduct.description,
+        imageUrl: updatesProduct?.imageUrl ?? existingProduct.imageUrl,
       },
     });
     return updatedProduct;

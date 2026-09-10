@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateBatchDto } from './dto/create-batch.dto';
 
@@ -49,7 +50,7 @@ export class BatchesService {
     });
     if (!batch) throw new NotFoundException('Batch not found');
 
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Soft-delete the batch
       await tx.batch.update({
         where: { id },

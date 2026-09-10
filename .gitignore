@@ -1,4 +1,5 @@
 node_modules
+.tools/
 
 /generated/prisma
 
@@ -9,5 +10,24 @@ node_modules
 .apps/api/.env
 memory
 Workspace Storage
-WALKTHROUGH.md
-plan.md
+.tools\
+/generated/
+/graphify-out/
+/Logo
+*.pdf
+.vscode/
+opencode.json
+.claude/
+.tools/
+
+# Private scratch docs stay local; everything else in docs/ is versioned
+/docs/private/
+# Local Next build dirs
+apps/web/.next-*
+apps/api/tsconfig.tsbuildinfo
+coverage/
+playwright-report/
+test-results/
+.agents/
+docs/
+
