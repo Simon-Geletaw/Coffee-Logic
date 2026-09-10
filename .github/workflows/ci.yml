@@ -17,6 +17,11 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - run: npm -C apps/web install
+      - run: npm -C apps/api install
+
+      - run: npm -C apps/web run build
+      - run: npm -C apps/api run build
       - run: npm -C apps/web run lint
       - run: npm -C apps/api run lint
 
