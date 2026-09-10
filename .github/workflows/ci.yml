@@ -17,6 +17,8 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm ci
-      - run: pnpm run lint
+      - run: pnpm -C apps/web run lint
+      - run: pnpm -C apps/api run lint
+
       - run: pnpm run typecheck
       - run: pnpm run build
