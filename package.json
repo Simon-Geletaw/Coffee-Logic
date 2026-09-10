@@ -4,6 +4,7 @@
   "scripts": {
     "dev:web": "pnpm -C apps/web dev",
     "dev:api": "pnpm -C apps/api start:dev",
+    "lint": "prettier --check --no-error-on-unmatched-pattern \"src/**/*.ts\" \"test/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "test": "pnpm -C apps/api test && pnpm -C apps/web test",
     "test:e2e": "pnpm -C apps/api test:e2e"
