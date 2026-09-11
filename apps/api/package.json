@@ -6,13 +6,13 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build ",
-    "build:watch": "nest build --watch",
+    "build": "prisma generate && nest build",
+    "build:watch": "prisma generate && nest build --watch",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "nest start --watch",
+    "start:dev": "prisma generate && nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "npm run build && node dist/main",
     "lint": "eslint .",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -39,7 +39,6 @@
     "dotenv": "^17.4.2",
     "helmet": "^8.3.0",
     "ioredis": "^6.0.0",
-    "nestjs": "^0.0.1",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "pg": "^8.20.0",
@@ -47,7 +46,6 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "stripe": "^22.6.1",
-    "tsc": "^2.0.4",
     "zod": "^4.3.6"
   },
   "devDependencies": {
