@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ChapaService } from 'src/payments/chapa.service';
 import {
   AddCartItemDto,
   CheckoutDto,
@@ -80,7 +81,10 @@ type CartRecord = {
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly chapa: ChapaService,
+  ) {}
 
   private newCartToken(): string {
     return randomBytes(32).toString('hex');
@@ -438,6 +442,12 @@ export class OrdersService {
       currency: placed.currency,
       paymentProvider: placed.paymentProvider,
       itemCount: placed.items.reduce((sum, item) => sum + item.quantity, 0),
+      // Chapa orders come back with a hosted payment URL — the browser
+      // redirects to it immediately. Other providers stay pending.
+      checkoutUrl:
+        placed.paymentProvider === 'chapa' && this.chapa.isConfigured
+          ? (await this.chapa.initializeForOrder(placed)).checkoutUrl
+          : null,
     };
   }
 

@@ -265,6 +265,19 @@ export function getOrder(id: string): Promise<OrderDetail> {
   return requestJson<OrderDetail>(`/cart/orders/${id}`, { auth: 'none' });
 }
 
+export type ChapaVerifyResult = {
+  orderId: string | null;
+  status: 'paid' | 'pending' | 'failed' | 'unknown';
+};
+
+/** Ask the API to confirm a Chapa transaction directly with Chapa. */
+export function verifyChapaPayment(txRef: string): Promise<ChapaVerifyResult> {
+  return requestJson<ChapaVerifyResult>(
+    `/payments/chapa/verify/${encodeURIComponent(txRef)}`,
+    { auth: 'none' },
+  );
+}
+
 /* ─── Admin: product variants ────────────────────────────────────────── */
 
 export function getVariants(productId?: string): Promise<AdminVariant[]> {
