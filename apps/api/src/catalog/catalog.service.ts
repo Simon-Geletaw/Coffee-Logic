@@ -1,5 +1,4 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Currency } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 export type CatalogFilter = {
@@ -43,12 +42,12 @@ export class CatalogService {
    * to show, so it would render as a dead card in the shop grid.
    */
   async listProducts(filter: CatalogFilter = {}) {
-    // `currency` arrives as a raw query string; Prisma's ProductVariant.currency
-    // is the Currency enum, so normalize it — unknown values are ignored rather
-    // than forwarded (they would make Prisma throw at runtime).
-    const currency = Object.values(Currency).includes(filter.currency as Currency)
-      ? (filter.currency as Currency)
-      : undefined;
+    // `currency` arrives as a raw query string. ProductVariant.currency is
+    // stored as a string, so only accept the currencies supported by checkout.
+    const currency =
+      filter.currency === 'ETB' || filter.currency === 'USD'
+        ? filter.currency
+        : undefined;
 
     const variantWhere = {
       isActive: true,

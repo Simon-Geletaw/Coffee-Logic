@@ -2,10 +2,10 @@
   "name": "coffee-logic",
   "private": true,
   "scripts": {
-    "postinstall": "pnpm -C apps/api exec prisma generate",
+    "postinstall": "pnpm -C apps/api exec prisma generate --schema ../../prisma/schema.prisma",
     "dev:web": "pnpm -C apps/web dev",
     "dev:api": "pnpm -C apps/api start:dev",
-    "db:generate": "pnpm -C apps/api exec prisma generate",
+    "db:generate": "pnpm -C apps/api exec prisma generate --schema ../../prisma/schema.prisma",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "test": "pnpm -C apps/api test && pnpm -C apps/web test",
     "test:e2e": "pnpm -C apps/api test:e2e"

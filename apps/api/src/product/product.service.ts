@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductDto } from 'src/products/dto/create-product.dto';
-import { Prisma } from '@prisma/client';
 
 type productAttribute = {
   roastLevel?: string;
@@ -20,12 +19,16 @@ type productAttribute = {
   imageUrl?: string;
 };
 
+type ProductWhere = NonNullable<
+  NonNullable<Parameters<PrismaService['product']['findMany']>[0]>['where']
+>;
+
 @Injectable()
 export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getProducts(filter: productAttribute = {}) {
-    const where: Prisma.ProductWhereInput = { isActive: true };
+    const where: ProductWhere = { isActive: true };
     for (const key of [
       'name',
       'origin',
@@ -41,7 +44,7 @@ export class ProductService {
         const words = value.split(/[\s_-]+/);
         if (key !== 'name' && key !== 'origin' && words.length > 1) {
           const alternatives = [...new Set([value, words.join(' '), words.join('-'), words.join('_')])];
-          const and = (where.AND ?? []) as Prisma.ProductWhereInput[];
+          const and = (where.AND ?? []) as ProductWhere[];
           and.push({ OR: alternatives.map((candidate) => ({ [key]: { equals: candidate, mode: 'insensitive' } })) });
           where.AND = and;
           continue;

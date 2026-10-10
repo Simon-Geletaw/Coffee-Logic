@@ -1,4 +1,5 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 export type CheckoutOrder = {
@@ -22,7 +23,7 @@ export class PaymentSettlementService {
   async markPaid(orderId: string): Promise<void> {
     // The conditional update locks the order. Webhook retries and return-page
     // verification cannot debit stock twice, even when they arrive together.
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const claimed = await tx.order.updateMany({
         where: { id: orderId, status: { in: ['pending', 'failed'] } },
         data: { status: 'paid', paideAt: new Date(), cartToken: null },
