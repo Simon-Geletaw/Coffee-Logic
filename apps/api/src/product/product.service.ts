@@ -19,9 +19,12 @@ type productAttribute = {
   imageUrl?: string;
 };
 
-type ProductWhere = NonNullable<
-  NonNullable<Parameters<PrismaService['product']['findMany']>[0]>['where']
->;
+type ProductWhere = {
+  isActive?: boolean;
+  AND?: ProductWhere[];
+  OR?: Array<Record<string, unknown>>;
+  [key: string]: unknown;
+};
 
 @Injectable()
 export class ProductService {
@@ -56,7 +59,11 @@ export class ProductService {
       }
     }
     const products = await this.prisma.product.findMany({
-      where,
+      where: where as Parameters<
+        PrismaService['product']['findMany']
+      >[0] extends { where?: infer T }
+        ? T
+        : never,
       select: {
         id: true,
         name: true,
