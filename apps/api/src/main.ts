@@ -1,7 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { ThrottlerGuard } from '@nestjs/throttler';
 import type { NextFunction, Request, Response } from 'express';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import helmet from 'helmet';
@@ -19,7 +18,6 @@ async function bootstrap() {
   // any JSON parsing touches the payload.
   const app = await NestFactory.create(AppModule, { rawBody: true });
   app.use(helmet());
-  app.useGlobalGuards(app.get(ThrottlerGuard));
   app.useGlobalFilters(new AllExceptionsFilter());
   app.use('/auth/login', (req: Request, res: Response, next: NextFunction) => {
     const now = Date.now();

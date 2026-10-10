@@ -174,8 +174,8 @@ export type PlacedOrder = {
   currency: string;
   paymentProvider: string | null;
   itemCount: number;
-  /** Hosted payment page (Chapa). Null when no online payment was started. */
-  checkoutUrl?: string | null;
+  /** Hosted payment page returned by the selected provider. */
+  checkoutUrl: string;
 };
 
 export type OrderDetail = Cart & {
@@ -184,6 +184,35 @@ export type OrderDetail = Cart & {
   shippingAddress: string | null;
   paymentProvider: string | null;
   createdAt: string;
+};
+
+export type AdminOrder = {
+  id: string;
+  status: string;
+  totalCents: number;
+  currency: string;
+  paymentProvider: string | null;
+  paymentIntentId: string | null;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  shippingAddress: string | null;
+  createdAt: string;
+  updatedAt: string;
+  paideAt: string | null;
+  user: { id: string; email: string; firstName: string; lastName: string } | null;
+  items: Array<{
+    id: string;
+    quantity: number;
+    unitPriceCents: number;
+    lineTotalCents: number;
+    productVariant: {
+      id: string;
+      sku: string | null;
+      weightGrams: number;
+      product: { id: string; name: string };
+    };
+  }>;
 };
 
 /* ─── Admin variants ─────────────────────────────────────────────────── */

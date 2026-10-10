@@ -32,7 +32,7 @@ const FIELDS: Array<{
   { key: 'description', label: 'Description', placeholder: 'Short product description…', span: true, isTextarea: true },
 ];
 
-export function ProductEditDrawer({ product, queryKeyPrefix, onClose }: ProductEditDrawerProps) {
+export function ProductEditDrawer({ product, onClose }: ProductEditDrawerProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -71,7 +71,8 @@ export function ProductEditDrawer({ product, queryKeyPrefix, onClose }: ProductE
   const updateMutation = useMutation({
     mutationFn: (payload: ProductInput) => updateProduct(product.id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKeyPrefix] });
+      void queryClient.invalidateQueries({ queryKey: ['admin'] });
+      void queryClient.invalidateQueries({ queryKey: ['catalog'] });
       toast('success', 'Product updated', `"${product.name ?? 'Product'}" has been saved.`);
       onClose();
     },

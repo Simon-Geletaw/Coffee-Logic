@@ -4,28 +4,30 @@ import type { BatchPayload } from '@/lib/types';
 
 export function useBatchesQuery(queryKeyPrefix: string) {
   return useQuery({
-    queryKey: [queryKeyPrefix],
+    queryKey: ['admin', 'batches', queryKeyPrefix],
     queryFn: getBatches,
     placeholderData: (prev) => prev,
   });
 }
 
-export function useCreateBatchMutation(queryKeyPrefix: string) {
+export function useCreateBatchMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: BatchPayload) => createBatch(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKeyPrefix] });
+      void queryClient.invalidateQueries({ queryKey: ['admin'] });
+      void queryClient.invalidateQueries({ queryKey: ['catalog'] });
     },
   });
 }
 
-export function useDeleteBatchMutation(queryKeyPrefix: string) {
+export function useDeleteBatchMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteBatch(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKeyPrefix] });
+      void queryClient.invalidateQueries({ queryKey: ['admin'] });
+      void queryClient.invalidateQueries({ queryKey: ['catalog'] });
     },
   });
 }

@@ -23,7 +23,7 @@ export class UserController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin') // list all users only for admin
   getAllUsers() {
     return this.userService.getAllUsers();

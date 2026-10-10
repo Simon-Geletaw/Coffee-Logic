@@ -16,8 +16,8 @@ export function BatchDashboard({ queryKeyPrefix }: BatchDashboardProps) {
   const [showAddForm, setShowAddForm] = useState(false);
 
   const batchesQuery = useBatchesQuery(queryKeyPrefix);
-  const createMutation = useCreateBatchMutation(queryKeyPrefix);
-  const deleteMutation = useDeleteBatchMutation(queryKeyPrefix);
+  const createMutation = useCreateBatchMutation();
+  const deleteMutation = useDeleteBatchMutation();
 
   const data = batchesQuery.data ?? [];
 

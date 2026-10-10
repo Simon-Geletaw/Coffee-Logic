@@ -19,9 +19,9 @@ export function InventoryDashboard({ queryKeyPrefix }: InventoryDashboardProps) 
 
   const inventoryQuery = useInventoryQuery(queryKeyPrefix);
   const batchesQuery = useBatchesQuery('batches-for-inventory');
-  const createMutation = useCreateInventoryMutation(queryKeyPrefix);
-  const adjustMutation = useAdjustInventoryMutation(queryKeyPrefix);
-  const deleteMutation = useDeleteInventoryMutation(queryKeyPrefix);
+  const createMutation = useCreateInventoryMutation();
+  const adjustMutation = useAdjustInventoryMutation();
+  const deleteMutation = useDeleteInventoryMutation();
 
   const inventory = useMemo(() => inventoryQuery.data ?? [], [inventoryQuery.data]);
   const batches = useMemo(() => batchesQuery.data ?? [], [batchesQuery.data]);

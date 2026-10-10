@@ -35,9 +35,9 @@ export function VariantDashboard({ queryKeyPrefix }: Props) {
     queryKeyPrefix,
     productFilter || undefined,
   );
-  const createMutation = useCreateVariantMutation(queryKeyPrefix);
-  const updateMutation = useUpdateVariantMutation(queryKeyPrefix);
-  const deleteMutation = useDeleteVariantMutation(queryKeyPrefix);
+  const createMutation = useCreateVariantMutation();
+  const updateMutation = useUpdateVariantMutation();
+  const deleteMutation = useDeleteVariantMutation();
 
   const products = useMemo(() => productsQuery.data ?? [], [productsQuery.data]);
   const variants = variantsQuery.data ?? [];

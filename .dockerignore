@@ -1,0 +1,56 @@
+# OS / VCS
+.git
+.github
+.gitignore
+.gitattributes
+.DS_Store
+
+# Secrets & local env
+**/.env
+**/.env.*
+!**/.env.example
+
+# Node / build artifacts (any depth)
+**/node_modules
+**/.next
+**/.next-web
+**/.next-build-check
+**/.next-web-dev-*
+**/.pnpm-store
+**/dist
+**/coverage
+**/.turbo
+**/.cache
+**/tsconfig.tsbuildinfo
+**/tsc-errors.txt
+**/*.tsbuildinfo
+**/test-results
+**/playwright-report
+**/.eslintcache
+
+# Large / non-app dirs
+generated
+graphify-out
+Logo
+memory
+docs
+.agents
+.claude
+.tools
+skills-lock.json
+opencode.json
+*.log
+*.md
+!**/README*.md
+PAYMENT_SETUP.md
+ORDERS_BUILD_3HR_PLAN.md
+coffee.md
+
+# Deploy secrets (tunnel credentials)
+deploy/cloudflared/*.json
+deploy/cloudflared/credentials.json
+
+# Docker / compose meta (not needed in image)
+docker-compose.yml
+Dockerfile
+deploy/Dockerfile

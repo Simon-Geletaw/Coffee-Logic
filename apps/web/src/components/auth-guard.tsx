@@ -19,9 +19,6 @@ function isRoleAllowed(userRole: UserRole, requiredRole?: UserRole): boolean {
   // Admin bypass — admin can always access everything
   if (userRole === 'admin') return true;
 
-  // Manager can access admin-required pages too
-  if (requiredRole === 'admin' && userRole === 'manager') return true;
-
   // Exact match
   return userRole === requiredRole;
 }

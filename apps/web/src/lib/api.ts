@@ -6,6 +6,7 @@ import { clearCartToken, getCartToken, saveCartToken } from '@/lib/cart-token';
 import type {
   AddCartItemPayload,
   AddCartItemResponse,
+  AdminOrder,
   AdminVariant,
   AuthSession,
   Batch,
@@ -108,6 +109,19 @@ export function deleteProduct(id: string): Promise<void> {
 
 export function getUsers(): Promise<UserRecord[]> {
   return requestJson<UserRecord[]>('/users');
+}
+
+export function getAdminOrders(filters: {
+  status?: string;
+  paymentProvider?: string;
+} = {}): Promise<AdminOrder[]> {
+  return requestJson<AdminOrder[]>(
+    `/admin/orders${toQueryString(filters)}`,
+  );
+}
+
+export function getAdminOrder(id: string): Promise<AdminOrder> {
+  return requestJson<AdminOrder>(`/admin/orders/${encodeURIComponent(id)}`);
 }
 
 export function createUser(payload: CreateUserInput): Promise<UserMutationResponse> {
@@ -248,6 +262,7 @@ export function clearCart(): Promise<Cart> {
 
 export async function checkout(payload: CheckoutPayload): Promise<PlacedOrder> {
   const order = await requestJson<PlacedOrder>('/cart/checkout', {
+    timeoutMs: 60_000,
     method: 'POST',
     auth: 'none',
     headers: cartHeaders(),
@@ -274,7 +289,7 @@ export type ChapaVerifyResult = {
 export function verifyChapaPayment(txRef: string): Promise<ChapaVerifyResult> {
   return requestJson<ChapaVerifyResult>(
     `/payments/chapa/verify/${encodeURIComponent(txRef)}`,
-    { auth: 'none' },
+    { auth: 'none', timeoutMs: 25_000 },
   );
 }
 
@@ -305,4 +320,8 @@ export function updateVariant(
 
 export function deleteVariant(id: string): Promise<void> {
   return requestJson<void>(`/admin/variants/${id}`, { method: 'DELETE' });
+}
+
+export function verifyStripePayment(sessionId: string): Promise<ChapaVerifyResult> {
+  return requestJson<ChapaVerifyResult>(`/payments/stripe/verify/${encodeURIComponent(sessionId)}`, { auth: 'none', timeoutMs: 45_000 });
 }

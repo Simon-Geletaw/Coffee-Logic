@@ -1,3 +1,5 @@
+name: coffelogic
+
 services:
   postgres:
     image: postgres:16
@@ -8,14 +10,118 @@ services:
       POSTGRES_PASSWORD: coffee
     ports:
       - "7000:5432"
-    volumes: 
-      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    volumes:
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U coffee -d coffee_logic"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   redis:
-    image: redis:latest
+    image: redis:7-alpine
     restart: unless-stopped
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+      target: api-runner
+      args:
+        DATABASE_URL: postgresql://coffee:coffee@postgres:5432/coffee_logic
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      DATABASE_URL: postgresql://coffee:coffee@postgres:5432/coffee_logic
+      REDIS_URL: redis://redis:6379
+      WEB_ORIGIN: https://simonbuilds.pro.et
+      API_PUBLIC_URL: https://api.simonbuilds.pro.et
+      NEXT_PUBLIC_API_BASE_URL: https://api.simonbuilds.pro.et
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # Not published on the host — local dev already owns 3000/3001.
+    # Caddy and Cloudflare Tunnel reach api:3001 on the compose network.
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 45s
+
+  web:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+      target: web-runner
+      args:
+        NEXT_PUBLIC_API_BASE_URL: /api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      COFFEE_LOGIC_NEXT_DIST_DIR: .next
+      NEXT_PUBLIC_API_BASE_URL: /api
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 45s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+      api:
+        condition: service_started
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  # docker compose --profile tunnel up -d
+  # Set TUNNEL_TOKEN in .env (Cloudflare Zero Trust → Networks → Tunnels)
+  cloudflared:
+    image: cloudflare/cloudflared:2026.8.1
+    restart: unless-stopped
+    depends_on:
+      caddy:
+        condition: service_healthy
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    volumes:
+      - ./deploy/cloudflared:/etc/cloudflared:ro
+    command: ["tunnel", "--no-autoupdate", "--config", "/etc/cloudflared/config.yml", "run"]
+    profiles:
+      - tunnel
+
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:

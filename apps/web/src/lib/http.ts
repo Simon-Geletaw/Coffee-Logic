@@ -63,7 +63,7 @@ export async function requestJson<T>(path: string, options: RequestOptions = {})
       signal: controller.signal,
     });
 
-    if (response.status === 401 || response.status === 403) {
+    if (auth === 'required' && response.status === 401) {
       clearSession();
     }
 
@@ -76,6 +76,8 @@ export async function requestJson<T>(path: string, options: RequestOptions = {})
         const apiMessage = (data as { message?: unknown }).message;
         if (typeof apiMessage === 'string' && apiMessage.trim()) {
           message = apiMessage;
+        } else if (Array.isArray(apiMessage)) {
+          message = apiMessage.filter((item) => typeof item === 'string').join('. ') || message;
         }
       }
       throw new HttpError(message, response.status);

@@ -54,7 +54,7 @@ export function ProductFilters({ filters, onFilterChange, onClear }: ProductFilt
 
       {(
         [
-          { key: 'roastLevel', placeholder: 'Roast level', options: ['Light', 'Medium', 'Dark'] },
+          { key: 'roastLevel', placeholder: 'Roast level', options: ['Light', 'Light-Medium', 'Medium', 'Medium-Dark', 'Dark'] },
           { key: 'grind', placeholder: 'Grind size', options: ['Whole Bean', 'Espresso', 'Fine', 'Medium', 'Coarse'] },
           { key: 'origin', placeholder: 'Origin' },
           { key: 'caffeine', placeholder: 'Caffeine', options: ['Regular', 'Decaf', 'Half-Caf'] },

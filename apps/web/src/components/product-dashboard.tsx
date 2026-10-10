@@ -36,8 +36,8 @@ export function ProductDashboard({ queryKeyPrefix, canManage = false }: ProductD
 
   // Hook integrations
   const productsQuery = useProductsQuery(queryKeyPrefix, apiFilters);
-  const createMutation = useCreateProductMutation(queryKeyPrefix);
-  const deleteMutation = useDeleteProductMutation(queryKeyPrefix);
+  const createMutation = useCreateProductMutation();
+  const deleteMutation = useDeleteProductMutation();
 
   const data = useMemo(() => productsQuery.data ?? [], [productsQuery.data]);
 

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductDto } from 'src/products/dto/create-product.dto';
+import { Prisma } from '@prisma/client';
 
 type productAttribute = {
   roastLevel?: string;
@@ -24,26 +25,39 @@ export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getProducts(filter: productAttribute = {}) {
+    const where: Prisma.ProductWhereInput = { isActive: true };
+    for (const key of [
+      'name',
+      'origin',
+      'roastLevel',
+      'grind',
+      'process',
+      'caffeine',
+    ] as const) {
+      const value = filter[key]?.trim();
+      if (value) {
+        // Older imports use slugs (whole-bean); the admin form uses labels
+        // (Whole Bean). Match either representation without rewriting data.
+        const words = value.split(/[\s_-]+/);
+        if (key !== 'name' && key !== 'origin' && words.length > 1) {
+          const alternatives = [...new Set([value, words.join(' '), words.join('-'), words.join('_')])];
+          const and = (where.AND ?? []) as Prisma.ProductWhereInput[];
+          and.push({ OR: alternatives.map((candidate) => ({ [key]: { equals: candidate, mode: 'insensitive' } })) });
+          where.AND = and;
+          continue;
+        }
+        where[key] =
+          key === 'name' || key === 'origin'
+            ? { contains: value, mode: 'insensitive' }
+            : { equals: value, mode: 'insensitive' };
+      }
+    }
     const products = await this.prisma.product.findMany({
-      where: {
-        ...(filter.roastLevel ? { roastLevel: filter.roastLevel } : {}),
-        ...(filter.grind ? { grind: filter.grind } : {}),
-        ...(filter.name
-          ? {
-              name: {
-                contains: filter.name,
-                mode: 'insensitive',
-              },
-            }
-          : {}),
-        ...(filter.origin ? { origin: filter.origin } : {}),
-        ...(filter.process ? { process: filter.process } : {}),
-        ...(filter.caffeine ? { caffeine: filter.caffeine } : {}),
-        isActive: true,
-      },
+      where,
       select: {
         id: true,
         name: true,
+        description: true,
         roastLevel: true,
         grind: true,
         origin: true,
@@ -59,6 +73,7 @@ export class ProductService {
     return products.map((product: (typeof products)[number]) => ({
       id: product.id,
       name: product.name,
+      description: product.description,
       roastLevel: product.roastLevel,
       grind: product.grind,
       origin: product.origin,

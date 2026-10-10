@@ -1,4 +1,5 @@
 node_modules
+.pnpm-store/
 .tools/
 
 /generated/prisma
@@ -10,7 +11,6 @@ node_modules
 .apps/api/.env
 memory
 Workspace Storage
-.tools\
 /generated/
 /graphify-out/
 /Logo

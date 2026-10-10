@@ -261,9 +261,8 @@ export default function CheckoutClient() {
               </div>
 
               <p className="text-[10px] leading-5 tracking-[0.06em] text-[#A79C86]">
-                You will be redirected to Chapa's secure page to complete the
-                payment (Telebirr, CBE Birr or card). Stripe payments are
-                arranged separately by our team.
+                You will be redirected to your selected provider&apos;s secure payment
+                page to complete your purchase.
               </p>
             </fieldset>
           </div>

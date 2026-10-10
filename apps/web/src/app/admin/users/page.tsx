@@ -93,7 +93,7 @@ const ROLE_BADGE: Record<string, string> = {
 export default function UsersPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const usersQuery = useQuery({ queryKey: ['users'], queryFn: getUsers });
+  const usersQuery = useQuery({ queryKey: ['admin', 'users'], queryFn: getUsers });
 
   const {
     register,
@@ -117,7 +117,7 @@ export default function UsersPage() {
     mutationFn: createUser,
     onSuccess: () => {
       reset();
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       toast('success', 'User created', 'The new user account has been added.');
     },
     onError: (err: unknown) => {
@@ -129,7 +129,7 @@ export default function UsersPage() {
   const deleteUserMutation = useMutation({
     mutationFn: deleteUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       toast('success', 'User removed', 'The user account has been deleted.');
     },
     onError: (err: unknown) => {

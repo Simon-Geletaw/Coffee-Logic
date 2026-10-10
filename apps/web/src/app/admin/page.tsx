@@ -38,14 +38,14 @@ export default function DashboardPage() {
 
   // Limit dashboard products to first 50 counts for summary â€” don't render full list
   const products = useQuery({
-    queryKey: ['products', 'dashboard-count'],
+    queryKey: ['admin', 'products', {}],
     queryFn: () => getProducts({}),
     // Only select the count so this query is lightweight on re-render
     select: (data) => ({ count: data.length }),
   });
 
   const users = useQuery({
-    queryKey: ['users', 'dashboard-count'],
+    queryKey: ['admin', 'users'],
     queryFn: getUsers,
     select: (data) => ({ count: data.length }),
   });
@@ -80,14 +80,14 @@ export default function DashboardPage() {
             />
             <StatCard
               label="Products"
-              value={products.isPending ? 'â€¦' : products.data?.count ?? 0}
+              value={products.isPending ? 'â€¦' : products.isError ? 'Unavailable' : products.data?.count ?? 0}
               sub="Total in catalogue"
               icon={<Package size={18} />}
               loading={products.isPending}
             />
             <StatCard
               label="Users"
-              value={users.isPending ? 'â€¦' : users.data?.count ?? 0}
+              value={users.isPending ? 'â€¦' : users.isError ? 'Unavailable' : users.data?.count ?? 0}
               sub="Registered accounts"
               icon={<Users size={18} />}
               loading={users.isPending}

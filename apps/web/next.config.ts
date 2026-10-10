@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
-const distDir = process.env.COFFEE_LOGIC_NEXT_DIST_DIR ?? '.next-web';
+const distDir = process.env.COFFEE_LOGIC_NEXT_DIST_DIR ?? '.next';
 
 const baseConfig: NextConfig = {
   // Keep build artifacts scoped to this app in a pnpm workspace.

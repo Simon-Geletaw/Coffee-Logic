@@ -3,7 +3,7 @@
 import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LogOut, LayoutDashboard, Package, Users, Coffee, Layers, Warehouse, Tags } from 'lucide-react';
+import { LogOut, LayoutDashboard, Package, Users, Coffee, Layers, Warehouse, Tags, ShoppingBag } from 'lucide-react';
 import { clearSession, getSession } from '@/lib/session';
 
 type AdminShellProps = {
@@ -20,6 +20,7 @@ const nav = [
   { href: '/admin/batches', label: 'Batches', Icon: Layers },
   { href: '/admin/inventory', label: 'Inventory', Icon: Warehouse },
   { href: '/admin/users', label: 'Users', Icon: Users },
+  { href: '/admin/orders', label: 'Orders', Icon: ShoppingBag },
 ];
 
 const ROLE_BADGE_COLORS: Record<string, string> = {

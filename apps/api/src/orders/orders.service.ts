@@ -1,16 +1,19 @@
 import {
   BadRequestException,
+  ServiceUnavailableException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChapaService } from 'src/payments/chapa.service';
+import { StripeService } from 'src/payments/stripe.service';
 import {
   AddCartItemDto,
   CheckoutDto,
   UpdateCartItemDto,
 } from './dto/create-order.dto';
+import { BadRequestException as InvalidQueryException } from '@nestjs/common';
 
 const cartInclude = {
   items: {
@@ -26,6 +29,7 @@ const cartInclude = {
           product: {
             select: {
               id: true,
+              isActive: true,
               name: true,
               origin: true,
               roastLevel: true,
@@ -54,6 +58,7 @@ type CartItemRecord = {
     isActive: boolean;
     product: {
       id: string;
+      isActive: boolean;
       name: string;
       origin: string;
       roastLevel: string;
@@ -84,6 +89,7 @@ export class OrdersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly chapa: ChapaService,
+    private readonly stripe: StripeService,
   ) {}
 
   private newCartToken(): string {
@@ -388,6 +394,13 @@ export class OrdersService {
    * re-checked because nothing was reserved while the cart sat idle.
    */
   async checkout(cartToken: string | undefined, dto: CheckoutDto) {
+    const provider =
+      dto.paymentProvider === 'stripe' ? this.stripe : this.chapa;
+    if (!provider.isConfigured) {
+      throw new ServiceUnavailableException(
+        'Selected payment provider is not configured. Please choose another payment method.',
+      );
+    }
     const cart = await this.requireCart(cartToken);
 
     if (cart.items.length === 0) {
@@ -395,7 +408,10 @@ export class OrdersService {
     }
 
     for (const item of cart.items) {
-      if (!item.productVariant.isActive) {
+      if (
+        !item.productVariant.isActive ||
+        !item.productVariant.product.isActive
+      ) {
         throw new BadRequestException(
           item.productVariant.product.name + ' is no longer available.',
         );
@@ -420,7 +436,7 @@ export class OrdersService {
     await this.recalculate(cart.id);
 
     const placed = (await this.prisma.order.update({
-      where: { id: cart.id },
+      where: { id: cart.id, status: 'cart' },
       data: {
         status: 'pending',
         paymentProvider: dto.paymentProvider,
@@ -428,13 +444,28 @@ export class OrdersService {
         contactEmail: dto.contactEmail,
         contactPhone: dto.contactPhone ?? null,
         shippingAddress: dto.shippingAddress,
-        // Release the token so the next visit starts a fresh cart rather than
-        // reopening a submitted order.
-        cartToken: null,
+        // Keep the token until the provider returns a usable payment URL.
+        cartToken,
       },
       include: cartInclude,
     })) as CartRecord;
 
+    let checkoutUrl: string;
+    try {
+      checkoutUrl = (await provider.initializeForOrder(placed)).checkoutUrl;
+    } catch (error) {
+      // A failed initialization must leave the cart available for retry.
+      // Never overwrite a payment that a concurrent callback has confirmed.
+      await this.prisma.order.updateMany({
+        where: { id: placed.id, status: 'pending' },
+        data: { status: 'cart', paymentProvider: null, paymentIntentId: null },
+      });
+      throw error;
+    }
+    await this.prisma.order.update({
+      where: { id: placed.id },
+      data: { cartToken: null },
+    });
     return {
       orderId: placed.id,
       status: placed.status,
@@ -442,12 +473,7 @@ export class OrdersService {
       currency: placed.currency,
       paymentProvider: placed.paymentProvider,
       itemCount: placed.items.reduce((sum, item) => sum + item.quantity, 0),
-      // Chapa orders come back with a hosted payment URL — the browser
-      // redirects to it immediately. Other providers stay pending.
-      checkoutUrl:
-        placed.paymentProvider === 'chapa' && this.chapa.isConfigured
-          ? (await this.chapa.initializeForOrder(placed)).checkoutUrl
-          : null,
+      checkoutUrl,
     };
   }
 
@@ -470,5 +496,98 @@ export class OrdersService {
       paymentProvider: order.paymentProvider,
       createdAt: order.createdAt,
     };
+  }
+
+  async getAdminOrders(status?: string, paymentProvider?: string) {
+    const allowedStatuses = ['cart', 'pending', 'paid', 'failed', 'refunded'];
+    const allowedProviders = ['chapa', 'stripe'];
+
+    if (status && !allowedStatuses.includes(status)) {
+      throw new InvalidQueryException('Invalid order status');
+    }
+    if (paymentProvider && !allowedProviders.includes(paymentProvider)) {
+      throw new InvalidQueryException('Invalid payment provider');
+    }
+
+    return this.prisma.order.findMany({
+      where: {
+        ...(status ? { status: status as never } : {}),
+        ...(paymentProvider ? { paymentProvider } : {}),
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+      select: {
+        id: true,
+        status: true,
+        totalCents: true,
+        currency: true,
+        paymentProvider: true,
+        paymentIntentId: true,
+        contactName: true,
+        contactEmail: true,
+        contactPhone: true,
+        shippingAddress: true,
+        createdAt: true,
+        updatedAt: true,
+        paideAt: true,
+        user: { select: { id: true, email: true, firstName: true, lastName: true } },
+        items: {
+          select: {
+            id: true,
+            quantity: true,
+            unitPriceCents: true,
+            lineTotalCents: true,
+            productVariant: {
+              select: {
+                id: true,
+                sku: true,
+                weightGrams: true,
+                product: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async getAdminOrder(id: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        status: true,
+        totalCents: true,
+        currency: true,
+        paymentProvider: true,
+        paymentIntentId: true,
+        contactName: true,
+        contactEmail: true,
+        contactPhone: true,
+        shippingAddress: true,
+        createdAt: true,
+        updatedAt: true,
+        paideAt: true,
+        user: { select: { id: true, email: true, firstName: true, lastName: true } },
+        items: {
+          select: {
+            id: true,
+            quantity: true,
+            unitPriceCents: true,
+            lineTotalCents: true,
+            productVariant: {
+              select: {
+                id: true,
+                sku: true,
+                weightGrams: true,
+                product: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
   }
 }

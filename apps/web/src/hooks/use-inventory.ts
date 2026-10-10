@@ -7,7 +7,7 @@ import type { InventoryPayload, InventoryAdjustPayload } from '@/lib/types';
  */
 export function useInventoryQuery(queryKeyPrefix: string) {
   return useQuery({
-    queryKey: [queryKeyPrefix],
+    queryKey: ['admin', 'inventory', queryKeyPrefix],
     queryFn: getInventory,
     placeholderData: (prev) => prev,
   });
@@ -17,12 +17,13 @@ export function useInventoryQuery(queryKeyPrefix: string) {
  * Creates inventory for a batch.
  * Invalidates the inventory list on success.
  */
-export function useCreateInventoryMutation(queryKeyPrefix: string) {
+export function useCreateInventoryMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: InventoryPayload) => createInventory(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKeyPrefix] });
+      void queryClient.invalidateQueries({ queryKey: ['admin'] });
+      void queryClient.invalidateQueries({ queryKey: ['catalog'] });
     },
   });
 }
@@ -31,13 +32,14 @@ export function useCreateInventoryMutation(queryKeyPrefix: string) {
  * Adjusts stock quantities (onHand / reserved) for an inventory record.
  * Invalidates the inventory list on success.
  */
-export function useAdjustInventoryMutation(queryKeyPrefix: string) {
+export function useAdjustInventoryMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: InventoryAdjustPayload }) =>
       adjustInventory(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKeyPrefix] });
+      void queryClient.invalidateQueries({ queryKey: ['admin'] });
+      void queryClient.invalidateQueries({ queryKey: ['catalog'] });
     },
   });
 }
@@ -46,12 +48,13 @@ export function useAdjustInventoryMutation(queryKeyPrefix: string) {
  * Soft-deletes an inventory record.
  * Invalidates the inventory list on success.
  */
-export function useDeleteInventoryMutation(queryKeyPrefix: string) {
+export function useDeleteInventoryMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteInventory(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKeyPrefix] });
+      void queryClient.invalidateQueries({ queryKey: ['admin'] });
+      void queryClient.invalidateQueries({ queryKey: ['catalog'] });
     },
   });
 }

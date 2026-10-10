@@ -11,39 +11,42 @@ import type { VariantPayload, VariantUpdatePayload } from '@/lib/types';
 
 export function useVariantsQuery(queryKeyPrefix: string, productId?: string) {
   return useQuery({
-    queryKey: [queryKeyPrefix, productId ?? 'all'],
+    queryKey: ['admin', 'variants', queryKeyPrefix, productId ?? 'all'],
     queryFn: () => getVariants(productId),
     placeholderData: (prev) => prev,
   });
 }
 
-export function useCreateVariantMutation(queryKeyPrefix: string) {
+export function useCreateVariantMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: VariantPayload) => createVariant(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKeyPrefix] });
+      void queryClient.invalidateQueries({ queryKey: ['admin'] });
+      void queryClient.invalidateQueries({ queryKey: ['catalog'] });
     },
   });
 }
 
-export function useUpdateVariantMutation(queryKeyPrefix: string) {
+export function useUpdateVariantMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: VariantUpdatePayload }) =>
       updateVariant(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKeyPrefix] });
+      void queryClient.invalidateQueries({ queryKey: ['admin'] });
+      void queryClient.invalidateQueries({ queryKey: ['catalog'] });
     },
   });
 }
 
-export function useDeleteVariantMutation(queryKeyPrefix: string) {
+export function useDeleteVariantMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteVariant(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKeyPrefix] });
+      void queryClient.invalidateQueries({ queryKey: ['admin'] });
+      void queryClient.invalidateQueries({ queryKey: ['catalog'] });
     },
   });
 }

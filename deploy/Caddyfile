@@ -1,0 +1,42 @@
+http://simonbuilds.pro.et, http://www.simonbuilds.pro.et 
+{
+    encode zstd gzip
+    reverse_proxy web:3000
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}
+
+http://api.simonbuilds.pro.et 
+{
+    encode zstd gzip
+    reverse_proxy api:3001
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+    }
+}
+
+:80 {
+    handle /healthz {
+        respond 200
+    }
+
+    handle_path /api/* {
+        reverse_proxy api:3001
+    }
+
+    handle {
+        encode zstd gzip
+        reverse_proxy web:3000
+
+        header {
+            X-Content-Type-Options "nosniff"
+            Referrer-Policy "strict-origin-when-cross-origin"
+        }
+    }
+}

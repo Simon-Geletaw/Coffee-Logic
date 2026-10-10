@@ -1,0 +1,14 @@
+# Cloudflare tunnel config for the Docker compose stack.
+# For credential-file mode, the tunnel UUID must match the tunnel created in Cloudflare.
+# For token mode, Cloudflare Zero Trust manages the ingress and this file is ignored.
+tunnel: ${TUNNEL_ID:-}
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: simonbuilds.pro.et
+    service: http://caddy:80
+  - hostname: www.simonbuilds.pro.et
+    service: http://caddy:80
+  - hostname: api.simonbuilds.pro.et
+    service: http://caddy:80
+  - service: http_status:404

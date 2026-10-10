@@ -34,6 +34,9 @@ jobs:
       - name: Verify API emits dist/main.js
         run: test -f apps/api/dist/main.js
 
+      - name: Test API
+        run: pnpm -C apps/api test --runInBand
+
       - name: Typecheck web
         run: pnpm -C apps/web run typecheck
 
