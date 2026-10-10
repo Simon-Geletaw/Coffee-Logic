@@ -60,7 +60,7 @@ export default function ProductImage({
       alt={`${name} coffee`}
       fill
       sizes={sizes}
-      quality={100}
+      quality={75}
       priority={priority}
       className={className}
     />

@@ -29,7 +29,7 @@ export default function SiteHeader() {
           width={56}
           height={56}
           priority
-          quality={100}
+          quality={75}
           className="size-11 object-contain md:size-14"
         />
 

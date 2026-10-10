@@ -61,10 +61,9 @@ const envSchema = z
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== 'production') return;
 
+    // Chapa is the active payment provider; Redis backs the checkout holds.
     const required = [
       'REDIS_URL',
-      'STRIPE_SECRET_KEY',
-      'STRIPE_WEBHOOK_SECRET',
       'CHAPA_SECRET_KEY',
       'CHAPA_WEBHOOK_SECRET',
     ] as const;
@@ -79,12 +78,31 @@ const envSchema = z
       }
     }
 
+    // Stripe stays optional. But a half-configured Stripe is worse than none:
+    // a key without its webhook secret silently drops payment confirmations.
+    if (env.STRIPE_SECRET_KEY && !env.STRIPE_WEBHOOK_SECRET) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['STRIPE_WEBHOOK_SECRET'],
+        message: 'STRIPE_WEBHOOK_SECRET is required when STRIPE_SECRET_KEY is set',
+      });
+    }
+
     if (env.STRIPE_SECRET_KEY?.startsWith('sk_test_')) {
       ctx.addIssue({
         code: 'custom',
         path: ['STRIPE_SECRET_KEY'],
         message: 'A Stripe TEST key cannot be used in production',
       });
+    }
+
+    // A TEST key cannot accept real payments, but crashing the whole API over
+    // it would take the storefront down too. Fail loud, not fatal — swap in
+    // the live key (CHASECK_LIVE-…) as soon as business verification clears.
+    if (env.CHAPA_SECRET_KEY?.includes('_TEST-')) {
+      console.error(
+        '⚠️  CHAPA_SECRET_KEY is a TEST key — hosted checkout will only work with Chapa sandbox test credentials, not real money.',
+      );
     }
   });
 

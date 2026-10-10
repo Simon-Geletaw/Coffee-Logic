@@ -174,6 +174,8 @@ export type PlacedOrder = {
   currency: string;
   paymentProvider: string | null;
   itemCount: number;
+  /** Hosted payment page (Chapa). Null when no online payment was started. */
+  checkoutUrl?: string | null;
 };
 
 export type OrderDetail = Cart & {

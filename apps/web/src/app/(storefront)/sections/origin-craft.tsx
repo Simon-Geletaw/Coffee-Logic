@@ -18,7 +18,7 @@ export default function OriginCraft() {
         src={image.src}
         alt={image.alt}
         fill
-        quality={100}
+        quality={75}
         sizes="100vw"
         className="object-cover"
         style={{ objectPosition: "35% center" }}

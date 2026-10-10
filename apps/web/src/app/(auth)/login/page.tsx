@@ -27,9 +27,9 @@ export default function LoginPage() {
   });
 
   return (
-    <main className="max-w-3xl">
-      <section className="panel fade-up grid gap-6 p-6 md:grid-cols-[1.1fr_1fr] md:p-8">
-        <div>
+    <main className="flex min-h-screen w-full items-center justify-center px-4 py-12">
+      <section className="panel fade-up w-full max-w-md grid gap-6 p-6 sm:p-8">
+        <div className="text-center">
           <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">Secure Access</p>
           <h1 className="mt-3 text-3xl font-bold leading-tight">Coffee Logic</h1>
         </div>

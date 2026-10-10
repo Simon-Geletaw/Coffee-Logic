@@ -24,7 +24,7 @@ opencode.json
 /docs/private/
 # Local Next build dirs
 apps/web/.next-*
-apps/api/tsconfig.tsbuildinfo
+*.tsbuildinfo
 coverage/
 playwright-report/
 test-results/

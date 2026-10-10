@@ -12,9 +12,9 @@ import { useToast } from '@/components/toast';
 import { checkoutSchema, type CheckoutInput } from '@/lib/validators';
 
 /**
- * Payment is not wired up yet — the shopper picks a provider and the order is
- * saved as `pending` with that choice recorded. Chapa and Stripe integrations
- * read `Order.paymentProvider` when they land.
+ * Chapa is wired up: placing the order with Chapa selected returns a hosted
+ * payment URL and the browser is redirected to it. Stripe stays pending until
+ * its integration lands.
  */
 const PROVIDERS = [
   {
@@ -113,6 +113,11 @@ export default function CheckoutClient() {
       },
       {
         onSuccess: (order) => {
+          // Chapa returns a hosted payment page — send the shopper there now.
+          if (order.checkoutUrl) {
+            window.location.href = order.checkoutUrl;
+            return;
+          }
           toast('success', 'Order placed', `Reference ${order.orderId.slice(0, 8)}`);
           router.push(`/orders/${order.orderId}`);
         },
@@ -256,8 +261,9 @@ export default function CheckoutClient() {
               </div>
 
               <p className="text-[10px] leading-5 tracking-[0.06em] text-[#A79C86]">
-                Your order is recorded now and held as pending. Payment is
-                collected separately — we will email you the payment link.
+                You will be redirected to Chapa's secure page to complete the
+                payment (Telebirr, CBE Birr or card). Stripe payments are
+                arranged separately by our team.
               </p>
             </fieldset>
           </div>

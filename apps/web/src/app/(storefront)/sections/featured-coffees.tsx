@@ -32,7 +32,7 @@ export default function FeaturedCoffees() {
                   <Image
                     src={image.src}
                     alt={image.alt}
-                    quality={100}
+                    quality={75}
                     sizes="(min-width: 1024px) 384px, (min-width: 640px) 45vw, 90vw"
                     className="h-full w-auto object-contain drop-shadow-[0_18px_22px_rgba(60,45,20,0.18)] transition-transform duration-300 group-hover:scale-[1.03]"
                   />

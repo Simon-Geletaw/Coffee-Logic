@@ -8,10 +8,13 @@ const baseConfig: NextConfig = {
   // The dev script can override this to a unique folder to avoid deletes on startup.
   distDir,
   images: {
-    // Serve images at maximum quality (quality={100} is used across the storefront).
-    qualities: [75, 100],
+    // Sources are pre-compressed WebP (see scripts/optimize-images.mjs); the
+    // optimizer only re-encodes sizes, so quality 75 keeps files tiny.
+    qualities: [75],
     // Prefer AVIF, fall back to WebP — best fidelity per byte at high quality.
     formats: ['image/avif', 'image/webp'],
+    // Keep the optimizer's output cache warm for 30 days.
+    minimumCacheTTL: 60 * 60 * 24 * 30,
     // Product.imageUrl can point at an external host. Optimised images are
     // re-served from this origin, so the CSP img-src 'self' rule still covers
     // them. NOTE: narrow this to your actual image host before production —
@@ -20,6 +23,11 @@ const baseConfig: NextConfig = {
   },
   async headers() {
     return [
+      {
+        // Immutable hashed build output — cache forever; cache busting via URL hash.
+        source: '/_next/static/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
       {
         source: '/:path*',
         headers: [
@@ -42,11 +50,12 @@ const baseConfig: NextConfig = {
           {
             key: 'Content-Security-Policy',
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://tile.openstreetmap.org; connect-src 'self' http://localhost:3001 https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://tile.openstreetmap.org; connect-src 'self' https://api.simonbuilds.pro.et; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
           },
           {
+            // HTML revalidates on every request; /_next/static above caches forever.
             key: 'Cache-Control',
-            value: 'no-store',
+            value: 'public, max-age=0, must-revalidate',
           },
         ],
       },

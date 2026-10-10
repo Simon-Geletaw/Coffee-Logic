@@ -1,15 +1,15 @@
 import type { StaticImageData } from "next/image";
 
-import logoMark from "@/components/assets/melkora_logo_mark.png";
-import heroImage from "@/components/assets/hero.png";
-import cafeScene from "@/components/assets/melkora_cafe_scene.png";
-import bagSidamo from "@/components/assets/coffee_bag_1.svg";
-import bagYirgacheffe from "@/components/assets/coffee_bag_2.svg";
-import bagGuji from "@/components/assets/coffee_bag_3.svg";
-import productLineup from "@/components/assets/melkora_product_lineup.png";
-import originStory from "@/components/assets/origin_story.png";
-import darkBackground from "@/components/assets/melkora_dark_background.png";
-import limestoneBackground from "@/components/assets/melkora_limestone_background.png";
+import logoMark from "@/components/assets/melkora_logo_mark.webp";
+import heroImage from "@/components/assets/hero.webp";
+import cafeScene from "@/components/assets/melkora_cafe_scene.webp";
+import bagSidamo from "@/components/assets/coffee_bag_1.webp";
+import bagYirgacheffe from "@/components/assets/coffee_bag_2.webp";
+import bagGuji from "@/components/assets/coffee_bag_3.webp";
+import productLineup from "@/components/assets/melkora_product_lineup.webp";
+import originStory from "@/components/assets/origin_story.webp";
+import darkBackground from "@/components/assets/melkora_dark_background.webp";
+import limestoneBackground from "@/components/assets/melkora_limestone_background.webp";
 
 export type imagePath = { order: number; src: StaticImageData; alt: string };
 
