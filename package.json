@@ -3,6 +3,8 @@
   "private": true,
   "scripts": {
     "postinstall": "pnpm -C apps/api exec prisma generate --schema ../../prisma/schema.prisma",
+    "build": "pnpm -C apps/api build",
+    "start:prod": "pnpm -C apps/api start:prod",
     "dev:web": "pnpm -C apps/web dev",
     "dev:api": "pnpm -C apps/api start:dev",
     "db:generate": "pnpm -C apps/api exec prisma generate --schema ../../prisma/schema.prisma",
