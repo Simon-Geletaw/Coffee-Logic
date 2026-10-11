@@ -17,15 +17,15 @@ services:
       # Render injects PORT automatically (defaults to 10000); src/main.ts
       # already binds to process.env.PORT on 0.0.0.0.
       - key: DATABASE_URL
-        sync: false # Render Postgres Internal Database URL (postgres:// is accepted)
+        sync: false # Neon connection string (pooled URL, -pooler, with ?sslmode=require) — postgres:// and postgresql:// both accepted
       - key: JWT_SECRET
         sync: false # EXACTLY 64 hex chars: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
       - key: WEB_ORIGIN
-        sync: false # e.g. https://your-frontend.onrender.com (used for CORS)
+        sync: false # Vercel frontend URL, e.g. https://your-app.vercel.app (the only CORS origin in production)
       - key: API_PUBLIC_URL
         sync: false # e.g. https://coffee-logic-api.onrender.com (payment webhook/callback URLs)
       - key: REDIS_URL
-        sync: false # REQUIRED in production (Render Key Value internal URL, redis://...)
+        sync: false # REQUIRED in production — Render Key Value internal URL (redis://...), or an Upstash URL
       - key: CHAPA_SECRET_KEY
         sync: false # REQUIRED in production (CHASECK_...)
       - key: CHAPA_WEBHOOK_SECRET
