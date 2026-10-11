@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express';
+import type { Handler, Request, Response } from 'express';
 import { createApp } from '../src/create-app';
 
 let handlerPromise: Promise<Handler> | undefined;
