@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import type { Handler, Request, Response } from 'express';
+import type { Handler, NextFunction, Request, Response } from 'express';
 import { createApp } from '../apps/api/src/create-app';
 
 void NestFactory;
@@ -15,5 +15,10 @@ async function createHandler(): Promise<Handler> {
 export default async function handler(req: Request, res: Response) {
   handlerPromise ??= createHandler();
   const expressHandler = await handlerPromise;
-  return expressHandler(req, res);
+  const next: NextFunction = (error) => {
+    if (error) {
+      throw error;
+    }
+  };
+  return expressHandler(req, res, next);
 }
