@@ -6,7 +6,15 @@ import "dotenv/config";
 import { defineConfig } from "prisma/config";
 import * as process from 'node:process';
 
-if (!process.env.DATABASE_URL) {
+// `prisma generate` (run from the root postinstall and the api build) does not
+// need a reachable database, so a missing DATABASE_URL must not crash the
+// install/build. Commands that DO touch the database (migrate deploy, db seed,
+// db push) still hard-fail below if the variable is absent.
+const needsDatabase = process.argv.some((arg) =>
+  /migrate|db:|db$|^db$/.test(arg),
+);
+
+if (!process.env.DATABASE_URL && needsDatabase) {
   throw new Error('DATABASE_URL is required (check your .env file)');
 }
 
@@ -16,6 +24,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env.DATABASE_URL,
+    url: process.env.DATABASE_URL ?? 'postgresql://placeholder:placeholder@localhost:5432/placeholder',
   },
 });

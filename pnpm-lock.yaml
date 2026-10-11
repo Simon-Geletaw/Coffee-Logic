@@ -20,12 +20,6 @@ importers:
       eslint:
         specifier: ^9.39.5
         version: 9.39.5(jiti@2.6.1)
-      next:
-        specifier: 16.1.6
-        version: 16.1.6(@babel/core@7.29.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      pnpm:
-        specifier: ^11.5.1
-        version: 11.8.0
       prettier:
         specifier: ^3.8.1
         version: 3.8.1
@@ -3876,11 +3870,6 @@ packages:
   pluralize@8.0.0:
     resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
     engines: {node: '>=4'}
-
-  pnpm@11.8.0:
-    resolution: {integrity: sha512-wfXnxMskHI8XS3Q4UdgvQrgCMkr8iw8Ra5atsVqgZmSUjd42lgo7oQebpbSyndAUATW5S1tfUmNZIknWjlVfJg==}
-    engines: {node: '>=22.13'}
-    hasBin: true
 
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
@@ -9030,8 +9019,6 @@ snapshots:
       pathe: 2.0.3
 
   pluralize@8.0.0: {}
-
-  pnpm@11.8.0: {}
 
   possible-typed-array-names@1.1.0: {}
 

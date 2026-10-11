@@ -21,9 +21,9 @@ const envSchema = z
     DATABASE_URL: z
       .string()
       .nonempty('DATABASE_URL is required')
-      .startsWith(
-        'postgresql://',
-        'DATABASE_URL must start with "postgresql://"',
+      .regex(
+        /^postgres(ql)?:\/\//,
+        'DATABASE_URL must start with "postgresql://" (or "postgres://" — Render/Heroku style URLs are accepted)',
       ),
 
     JWT_SECRET: z
@@ -84,7 +84,8 @@ const envSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['STRIPE_WEBHOOK_SECRET'],
-        message: 'STRIPE_WEBHOOK_SECRET is required when STRIPE_SECRET_KEY is set',
+        message:
+          'STRIPE_WEBHOOK_SECRET is required when STRIPE_SECRET_KEY is set',
       });
     }
 
