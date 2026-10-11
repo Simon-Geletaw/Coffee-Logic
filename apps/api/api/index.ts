@@ -18,6 +18,9 @@ export default async function handler(
 ) {
   handlerPromise ??= createHandler();
   const expressHandler = await handlerPromise;
+  if (req.url?.startsWith('/api')) {
+    req.url = req.url.slice(4) || '/';
+  }
   const next: NextFunction = (error) => {
     if (error) {
       throw error;
