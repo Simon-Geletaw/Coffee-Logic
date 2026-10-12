@@ -12,6 +12,8 @@ yarn.lock
 .tmp-dir/
 .env
 .apps/api/.env
+.env.vercel
+.env.production
 memory
 Workspace Storage
 /generated/
