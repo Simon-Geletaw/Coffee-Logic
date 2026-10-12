@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "buildCommand": "prisma generate --schema ../../prisma/schema.prisma",
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.ts"
+    }
+  ]
+}
