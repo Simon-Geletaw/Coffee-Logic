@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { UserRole } from 'src/auth/dto/validate-user.dto';
+import { UserRole } from '../../auth/dto/validate-user.dto';
 
 // Shape that the JWT strategy's validate() attaches to request.user
 export interface AuthenticatedUser {

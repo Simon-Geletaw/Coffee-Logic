@@ -5,8 +5,8 @@ import {
   NotFoundException,
   PreconditionFailedException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateProductDto } from 'src/products/dto/create-product.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateProductDto } from '../products/dto/create-product.dto';
 
 type productAttribute = {
   roastLevel?: string;

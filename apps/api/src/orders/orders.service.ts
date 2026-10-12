@@ -5,9 +5,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { ChapaService } from 'src/payments/chapa.service';
-import { StripeService } from 'src/payments/stripe.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { ChapaService } from '../payments/chapa.service';
+import { StripeService } from '../payments/stripe.service';
 import {
   AddCartItemDto,
   CheckoutDto,
