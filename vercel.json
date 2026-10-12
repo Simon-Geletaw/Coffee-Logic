@@ -1,7 +1,7 @@
 {
   "version": 2,
   "installCommand": "pnpm install",
-  "buildCommand": "pnpm db:generate",
+  "buildCommand": "prisma generate --schema prisma/schema.prisma",
   "routes": [
     {
       "src": "/(.*)",
