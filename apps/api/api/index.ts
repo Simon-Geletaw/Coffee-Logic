@@ -1,8 +1,5 @@
-import { NestFactory } from '@nestjs/core';
 import type { Handler, NextFunction, Request, Response } from 'express';
 import { createApp } from '../src/create-app';
-
-void NestFactory;
 
 let handlerPromise: Promise<Handler> | undefined;
 

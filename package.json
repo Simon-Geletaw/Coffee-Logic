@@ -18,13 +18,10 @@
     "test:e2e": "pnpm -C apps/api test:e2e"
   },
   "devDependencies": {
-    "@nestjs/cli": "^11.0.0",
-    "@nestjs/schematics": "^11.0.0",
     "@types/mocha": "^10.0.10",
     "prisma": "6.19.3"
   },
   "dependencies": {
-    "@nestjs/core": "^11.0.1",
     "@prisma/client": "6.19.3",
     "bcrypt": "^6.0.0",
     "eslint": "^9.39.5",
