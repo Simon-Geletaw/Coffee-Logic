@@ -56,7 +56,7 @@ export async function createApp() {
     return next();
   });
 
-  const webOrigin = 'https://coffee-logic-5219-ai5npwwod-s-bfe8.vercel.app';
+  const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:3000';
   app.enableCors({
     origin:
       process.env.NODE_ENV === 'production'
