@@ -31,15 +31,17 @@ export class StripeService {
 
   async initializeForOrder(
     order: CheckoutOrder,
+    returnOrigin?: string,
   ): Promise<{ checkoutUrl: string }> {
     if (!this.stripe)
       throw new ServiceUnavailableException(
         'Stripe is not configured. Please choose another payment method.',
       );
-    const origin = (process.env.WEB_ORIGIN ?? 'http://localhost:3000').replace(
-      /\/$/,
-      '',
-    );
+    const origin = (
+      returnOrigin ??
+      process.env.WEB_ORIGIN ??
+      'http://localhost:3000'
+    ).replace(/\/+$/, '');
     let session: Stripe.Checkout.Session;
     try {
       session = await this.stripe.checkout.sessions.create(

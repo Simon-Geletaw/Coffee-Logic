@@ -452,7 +452,9 @@ export class OrdersService {
 
     let checkoutUrl: string;
     try {
-      checkoutUrl = (await provider.initializeForOrder(placed)).checkoutUrl;
+      checkoutUrl = (
+        await provider.initializeForOrder(placed, dto.returnOrigin)
+      ).checkoutUrl;
     } catch (error) {
       // A failed initialization must leave the cart available for retry.
       // Never overwrite a payment that a concurrent callback has confirmed.

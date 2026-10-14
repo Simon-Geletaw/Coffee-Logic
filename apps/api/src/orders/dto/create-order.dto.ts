@@ -3,6 +3,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  IsUrl,
   IsUUID,
   Max,
   MaxLength,
@@ -54,4 +55,18 @@ export class CheckoutDto {
     message: 'paymentProvider must be chapa or stripe',
   })
   paymentProvider!: PaymentProvider;
+
+  /**
+   * Storefront origin (scheme + host) the payment provider should send the
+   * shopper back to. The frontend sends its own deployment URL so return
+   * redirects never depend on a stale WEB_ORIGIN. Falls back to WEB_ORIGIN
+   * when omitted (older clients).
+   */
+  @IsOptional()
+  @IsUrl(
+    { protocols: ['http', 'https'], require_tld: false },
+    { message: 'returnOrigin must be an http(s) origin' },
+  )
+  @MaxLength(300)
+  returnOrigin?: string;
 }

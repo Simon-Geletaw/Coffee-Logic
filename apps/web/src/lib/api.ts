@@ -1,6 +1,7 @@
 'use client';
 
 import { requestJson } from '@/lib/http';
+import { SITE_URL } from '@/lib/config';
 import { createSessionFromToken } from '@/lib/session';
 import { clearCartToken, getCartToken, saveCartToken } from '@/lib/cart-token';
 import type {
@@ -261,12 +262,15 @@ export function clearCart(): Promise<Cart> {
 }
 
 export async function checkout(payload: CheckoutPayload): Promise<PlacedOrder> {
+  const returnOrigin =
+    SITE_URL ||
+    (typeof window !== 'undefined' ? window.location.origin : undefined);
   const order = await requestJson<PlacedOrder>('/cart/checkout', {
     timeoutMs: 60_000,
     method: 'POST',
     auth: 'none',
     headers: cartHeaders(),
-    body: payload,
+    body: { ...payload, returnOrigin },
   });
 
   // The server releases the token on checkout, so the browser must drop it too

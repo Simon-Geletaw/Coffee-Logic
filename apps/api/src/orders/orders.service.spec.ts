@@ -72,6 +72,7 @@ describe('checkout handoff', () => {
       expect(result.checkoutUrl).toContain(paymentProvider);
       expect(provider.initializeForOrder).toHaveBeenCalledWith(
         expect.objectContaining({ status: 'pending', cartToken: 'token' }),
+        undefined,
       );
       expect(prisma.order.update).toHaveBeenLastCalledWith({
         where: { id: 'order' },

@@ -44,8 +44,15 @@ export class ChapaService {
   /**
    * Start a Chapa transaction for a placed order and remember its tx_ref.
    * Resolves with the hosted checkout URL to redirect the shopper to.
+   *
+   * `returnOrigin` is the storefront origin supplied by the checkout request
+   * (its own deployed URL); it overrides the server-level WEB_ORIGIN fallback
+   * so return redirects always land on the frontend that started checkout.
    */
-  async initializeForOrder(order: CheckoutOrder): Promise<{
+  async initializeForOrder(
+    order: CheckoutOrder,
+    returnOrigin?: string,
+  ): Promise<{
     checkoutUrl: string;
     txRef: string;
   }> {
@@ -56,6 +63,7 @@ export class ChapaService {
     }
 
     const txRef = `order-${randomUUID()}`;
+    const webOrigin = (returnOrigin ?? this.webOrigin).replace(/\/+$/, '');
     const [firstName, ...rest] = (order.contactName ?? 'Customer').split(' ');
 
     const payload = {
@@ -67,7 +75,7 @@ export class ChapaService {
       phone_number: order.contactPhone || undefined,
       tx_ref: txRef,
       // Chapa sends the shopper back here after paying.
-      return_url: `${this.webOrigin}/checkout/return?tx_ref=${txRef}`,
+      return_url: `${webOrigin}/checkout/return?tx_ref=${txRef}`,
       // Chapa posts the (signed) result here — the source of truth.
       callback_url: `${this.apiPublicUrl.replace(/\/$/, '')}/payments/chapa/callback`,
       customization: {

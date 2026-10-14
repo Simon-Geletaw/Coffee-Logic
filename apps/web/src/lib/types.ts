@@ -165,6 +165,8 @@ export type CheckoutPayload = {
   contactPhone?: string;
   shippingAddress: string;
   paymentProvider: PaymentProvider;
+  /** Storefront origin the payment provider should return the shopper to. */
+  returnOrigin?: string;
 };
 
 export type PlacedOrder = {

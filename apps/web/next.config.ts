@@ -3,6 +3,13 @@ import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
 const distDir = process.env.COFFEE_LOGIC_NEXT_DIST_DIR ?? '.next';
 
+// Keep the CSP connect-src allowlist in sync with the API base URL that
+// src/lib/config.ts resolves, so fetches are never blocked by our own policy.
+const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001').replace(/\/$/, '');
+const apiOrigin = new URL(apiBaseUrl).origin;
+// A relative NEXT_PUBLIC_API_BASE_URL (e.g. '/api') means same-origin, covered by 'self'.
+const connectSrc = apiBaseUrl.startsWith('/') ? "'self'" : `'self' ${apiOrigin}`;
+
 const baseConfig: NextConfig = {
   // Keep build artifacts scoped to this app in a pnpm workspace.
   // The dev script can override this to a unique folder to avoid deletes on startup.
@@ -50,7 +57,7 @@ const baseConfig: NextConfig = {
           {
             key: 'Content-Security-Policy',
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://tile.openstreetmap.org; connect-src 'self' https://api.simonbuilds.pro.et; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+              `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://tile.openstreetmap.org; connect-src ${connectSrc}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
           },
           {
             // HTML revalidates on every request; /_next/static above caches forever.
